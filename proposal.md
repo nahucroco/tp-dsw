@@ -33,7 +33,7 @@ Esta aplicación permite administrar eficientemente una biblioteca, gestionando 
 
 |Req|Detalle|
 |:-|:-|
-|Listados |1. Estadía del día filtrado por fecha muestra, cliente, habitaciones y estado <br>2. Reservas filtradas por cliente muestra datos del cliente y de cada reserve fechas, estado cantidad de habitaciones y huespedes|
+|Listados |1. Listado de lectores filtrado por sancion y cantidad de prestamos <br>2. Listado de préstamos filtrado por lector y libro, muestra nombre del lector, titulo y codigo del libro, y fechaInicio y fechaFin del prestamo|
 |CUU/Epic|1. Cancelar reserva<br>2. Avisar disponibilidad de libro|
 |Otros|1. Envío de recordatorio de devolución por email|
 
