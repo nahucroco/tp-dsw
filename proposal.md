@@ -26,7 +26,7 @@ Esta aplicación permite administrar eficientemente una biblioteca, gestionando 
 |CRUD simple|1. CRUD Libro<br>2. CRUD Usuario<br>3. CRUD Género<br>4. CRUD Idioma<br>5. CRUD Editorial<br>6. CRUD Autor<br>7. CRUD País|
 |CRUD dependiente|1. CRUD Reserva {depende de} CRUD Libro y CRUD Usuario<br>2. CRUD Préstamo {depende de} CRUD Libro y CRUD Usuario<br>3. CRUD ListaLectura {depende de} CRUD Usuario|
 |Listado<br>+<br>detalle| 1. Listado de libros filtrado por género, muestra título y autor de libro => detalle CRUD Libro<br> 2. Listado de reservas filtrado por fecha y lector, muestra titulo y codigo de libro, estado y nombre del lector => detalle muestra datos completos de la reserva y del lector|
-|CUU/Epic|1. Dejar una reseña<br>2. Dejar reseña<br>3. Solicitar libro|
+|CUU/Epic|1. Dejar una reseña<br>2. Sancionar a un usuario<br>3. Solicitar libro|
 |Otros|1. Recomendaciones personalizadas|
 
 ### Alcance Adicional Voluntario
@@ -34,6 +34,6 @@ Esta aplicación permite administrar eficientemente una biblioteca, gestionando 
 |Req|Detalle|
 |:-|:-|
 |Listados |1. Estadía del día filtrado por fecha muestra, cliente, habitaciones y estado <br>2. Reservas filtradas por cliente muestra datos del cliente y de cada reserve fechas, estado cantidad de habitaciones y huespedes|
-|CUU/Epic|1. Sancionar a un usuario<br>2. Avisar disponibilidad de libro|
+|CUU/Epic|1. Cancelar reserva<br>2. Avisar disponibilidad de libro|
 |Otros|1. Envío de recordatorio de devolución por email|
 
