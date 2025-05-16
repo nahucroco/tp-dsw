@@ -2,19 +2,18 @@
 
 ## Grupo
 ### Integrantes
-* legajo - Apellido(s), Nombre(s)
+* 49720 - Crocombette, Nahuel
 
 ### Repositorios
-* [frontend app](http://hyperlinkToGihubOrGitlab)
-* [backend app](http://hyperlinkToGihubOrGitlab)
-*Nota*: si utiliza un monorepo indicar un solo link con fullstack app.
+* [fullstack app](https://github.com/nahucroco/tp-dsw)
 
 ## Tema
 ### Descripción
-*2 a 6 líneas describiendo el negocio (menos es más)*
+Esta aplicación permite administrar eficientemente una biblioteca, gestionando libros, usuarios, préstamos y devoluciones. Facilita el control del inventario y el seguimiento de los movimientos de cada ejemplar. Su objetivo es optimizar el funcionamiento de la biblioteca y agilizar las tareas administrativas.
+
 
 ### Modelo
-![imagen del modelo]()
+![imagen del modelo](./modelo_dsw.jpg)
 
 *Nota*: incluir un link con la imagen de un modelo, puede ser modelo de dominio, diagrama de clases, DER. Si lo prefieren pueden utilizar diagramas con [Mermaid](https://mermaid.js.org) en lugar de imágenes.
 
