@@ -13,39 +13,27 @@ Esta aplicación permite administrar eficientemente una biblioteca, gestionando 
 
 
 ### Modelo
-![imagen del modelo](./modelo_dsw.jpg)
+[imagen del modelo](./modelo_dsw.jpg)
 
-*Nota*: incluir un link con la imagen de un modelo, puede ser modelo de dominio, diagrama de clases, DER. Si lo prefieren pueden utilizar diagramas con [Mermaid](https://mermaid.js.org) en lugar de imágenes.
+
 
 ## Alcance Funcional 
 
 ### Alcance Mínimo
 
-*Nota*: el siguiente es un ejemplo para un grupo de 3 integrantes para un sistema de hotel. El 
-
-Regularidad:
 |Req|Detalle|
 |:-|:-|
-|CRUD simple|1. CRUD Tipo Habitacion<br>2. CRUD Servicio<br>3. CRUD Localidad|
-|CRUD dependiente|1. CRUD Habitación {depende de} CRUD Tipo Habitacion<br>2. CRUD Cliente {depende de} CRUD Localidad|
-|Listado<br>+<br>detalle| 1. Listado de habitaciones filtrado por tipo de habitación, muestra nro y tipo de habitación => detalle CRUD Habitacion<br> 2. Listado de reservas filtrado por rango de fecha, muestra nro de habitación, fecha inicio y fin estadía, estado y nombre del cliente => detalle muestra datos completos de la reserva y del cliente|
-|CUU/Epic|1. Reservar una habitación para la estadía<br>2. Realizar el check-in de una reserva|
-
-
-Adicionales para Aprobación
-|Req|Detalle|
-|:-|:-|
-|CRUD |1. CRUD Tipo Habitacion<br>2. CRUD Servicio<br>3. CRUD Localidad<br>4. CRUD Provincia<br>5. CRUD Habitación<br>6. CRUD Empleado<br>7. CRUD Cliente|
-|CUU/Epic|1. Reservar una habitación para la estadía<br>2. Realizar el check-in de una reserva<br>3. Realizar el check-out y facturación de estadía y servicios|
-
+|CRUD simple|1. CRUD Libro<br>2. CRUD Usuario<br>3. CRUD Género<br>4. CRUD Idioma<br>5. CRUD Editorial<br>6. CRUD Autor<br>7. CRUD País|
+|CRUD dependiente|1. CRUD Reserva {depende de} CRUD Libro y CRUD Usuario<br>2. CRUD Préstamo {depende de} CRUD Libro y CRUD Usuario<br>3. CRUD ListaLectura {depende de} CRUD Usuario|
+|Listado<br>+<br>detalle| 1. Listado de libros filtrado por género, muestra título y autor de libro => detalle CRUD Libro<br> 2. Listado de reservas filtrado por fecha y lector, muestra titulo y codigo de libro, estado y nombre del lector => detalle muestra datos completos de la reserva y del lector|
+|CUU/Epic|1. Dejar una reseña<br>2. Dejar reseña<br>3. Solicitar libro|
+|Otros|1. Recomendaciones personalizadas|
 
 ### Alcance Adicional Voluntario
-
-*Nota*: El Alcance Adicional Voluntario es opcional, pero ayuda a que la funcionalidad del sistema esté completa y será considerado en la nota en función de su complejidad y esfuerzo.
 
 |Req|Detalle|
 |:-|:-|
 |Listados |1. Estadía del día filtrado por fecha muestra, cliente, habitaciones y estado <br>2. Reservas filtradas por cliente muestra datos del cliente y de cada reserve fechas, estado cantidad de habitaciones y huespedes|
-|CUU/Epic|1. Consumir servicios<br>2. Cancelación de reserva|
-|Otros|1. Envío de recordatorio de reserva por email|
+|CUU/Epic|1. Sancionar a un usuario<br>2. Avisar disponibilidad de libro|
+|Otros|1. Envío de recordatorio de devolución por email|
 
