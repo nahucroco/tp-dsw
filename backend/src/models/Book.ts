@@ -18,7 +18,4 @@ class Book {
     this.is_available = is_available;
   }
 }
-
-let book = new Book(1, 'harry', 'q', 'w', true);
-
-console.log(book.name);
+export { Book };
