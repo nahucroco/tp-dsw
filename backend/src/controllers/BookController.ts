@@ -6,6 +6,7 @@ let currentId = 1;
 export const getBook = (req: Request, res: Response) => {
   res.json(BookData);
 };
+
 export const getBookById = (req: Request, res: Response) => {
   const id = parseInt(req.params.id!);
   const book = BookData.find((b) => b.code === id);
