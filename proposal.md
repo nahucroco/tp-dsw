@@ -3,10 +3,8 @@
 ## Grupo
 ### Integrantes
 * 49720 - Crocombette, Nahuel
-* 49817 - Ayrton Ojeda 
 * 51839 - Bruno Tomás León 
 * 52948 - Lucio Albanesi
-* 48107 - Gomez, Azul
 
 ### Repositorios
 * [fullstack app](https://github.com/nahucroco/tp-dsw)
