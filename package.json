@@ -1,0 +1,21 @@
+{
+  "dependencies": {
+    "@mikro-orm/core": "^6.5.1",
+    "@mikro-orm/postgresql": "^6.5.1",
+    "dotenv": "^17.2.1",
+    "reflect-metadata": "^0.2.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.3.0",
+    "tsx": "^4.20.5"
+  },
+  "scripts": {
+    "dev": "tsx watch src/server.ts",
+    "build": "tsc",
+    "start": "node dist/server.js",
+    "mikro:generate": "mikro-orm migration:create",
+    "mikro:up": "mikro-orm migration:up",
+    "mikro:down": "mikro-orm migration:down",
+    "mikro:seed": "node dist/seed.js"
+  }
+}
