@@ -1,39 +1,35 @@
 import type { Request, Response } from "express";
-import UserData from "../data/UserData";
-import { User } from "../models/User";
+import { UserService } from "../services/UserService";
 
-let current_id = 1;
-
-export const getUser = (req: Request, res: Response) => {
-	res.json(UserData);
+const userService = new UserService();
+export const getUser = async (req: Request, res: Response) => {
+	const users = await userService.getAll();
+	res.json(users);
 };
-export const getUserById = (req: Request, res: Response) => {
-	const id = parseInt(req.params.id);
-	const user = UserData.find((user) => user.id === id);
+export const getUserById = async (req: Request, res: Response) => {
+	const id = parseInt(req.params.id, 10);
+	const user = await userService.getById(id);
 	if (!user) res.status(404).json({ message: "User not found" });
 	res.json(user);
 };
-export const createUser = (req: Request, res: Response) => {
-	const { fullName, username, password, email } = req.body;
-	const user = new User(current_id++, fullName, username, password, email);
-	UserData.push(user);
-	res.status(201).json(user);
+export const createUser = async (req: Request, res: Response) => {
+	const entity = req.body;
+	await userService.create(entity);
+	res.status(201).json(entity);
 };
-export const updateUser = (req: Request, res: Response) => {
-	const id = parseInt(req.params.id);
-	const user = UserData.find((user) => user.id === id);
-	if (!user) res.status(404).json({ message: "User not found" });
-	const { fullName, username, password, email } = req.body;
-	user.fullName = fullName;
-	user.username = username;
-	user.password = password;
-	user.email = email;
-	res.json(user);
+export const updateUser = async (req: Request, res: Response) => {
+	const id = parseInt(req.params.id, 10);
+	const entity = req.body;
+	if (id !== entity.code) {
+		return res.status(400).json({ message: "Id mismatch" });
+	}
+	const updated = await userService.update(entity);
+	if (!updated) return res.status(404).json({ message: "User not found" });
+	return res.status(204).json(updated);
 };
-export const deleteUser = (req: Request, res: Response) => {
-	const id = parseInt(req.params.id);
-	const index = UserData.findIndex((user) => user.id === id);
-	if (index === -1) res.status(404).json({ message: "User not found" });
-	UserData.splice(index, 1);
-	res.json("User deleted");
+export const deleteUser = async (req: Request, res: Response) => {
+	const id = parseInt(req.params.id, 10);
+	const deleted = await userService.delete(id);
+	if (!deleted) return res.status(404).json({ message: "User not found" });
+	res.json({ message: "User deleted" });
 };

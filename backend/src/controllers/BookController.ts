@@ -16,6 +16,7 @@ export const getBookById = async (req: Request, res: Response) => {
 
 export const createBook = async (req: Request, res: Response) => {
 	// TODO: agregar algun tipo de validacion para que compruebe que se ingrese un libro
+	//  (quizas usar la libreria zod)
 	const entity = req.body;
 	await bookService.create(entity);
 	res.status(201).json(entity);
