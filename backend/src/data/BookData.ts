@@ -1,5 +1,10 @@
 import type { Book } from "../models/Book";
 
+let currentId = 1;
 const books: Book[] = [];
 
-export default books;
+const generateId = () => {
+	return currentId++;
+};
+
+export { generateId, books };

@@ -1,45 +1,40 @@
 import type { Request, Response } from "express";
-import BookData from "../data/BookData";
-import { Book } from "../models/Book";
+import { BookService } from "../services/BookService";
 
-let currentId = 1;
-export const getBook = (req: Request, res: Response) => {
-	res.json(BookData);
+const bookService = new BookService();
+export const getBook = async (req: Request, res: Response) => {
+	const books = await bookService.getAll();
+	res.json(books);
 };
 
-export const getBookById = (req: Request, res: Response) => {
-	const id = parseInt(req.params.id!);
-	const book = BookData.find((b) => b.code === id);
+export const getBookById = async (req: Request, res: Response) => {
+	const id = parseInt(req.params.id, 10);
+	const book = await bookService.getById(id);
 	if (!book) return res.status(404).json({ message: "Book not found" });
 	res.json(book);
 };
 
-export const createBook = (req: Request, res: Response) => {
-	const { name, author, gender, is_available } = req.body;
-	const newBook = new Book(currentId++, name, author, gender, is_available);
-	BookData.push(newBook);
-	res.status(201).json(newBook);
+export const createBook = async (req: Request, res: Response) => {
+	// TODO: agregar algun tipo de validacion para que compruebe que se ingrese un libro
+	const entity = req.body;
+	await bookService.create(entity);
+	res.status(201).json(entity);
 };
 
-export const updateBook = (req: Request, res: Response) => {
-	const id = parseInt(req.params.id!);
-	const book = BookData.find((b) => b.code === id);
-	if (!book) return res.status(404).json({ message: "Book not found" });
-
-	const { name, author, gender, is_available } = req.body;
-	book.name = name;
-	book.author = author;
-	book.gender = gender;
-	book.is_available = is_available;
-
-	res.json(book);
+export const updateBook = async (req: Request, res: Response) => {
+	const id = parseInt(req.params.id, 10);
+	const entity = req.body;
+	if (id !== entity.code) {
+		return res.status(400).json({ message: "Id mismatch" });
+	}
+	const updated = await bookService.update(entity);
+	if (!updated) return res.status(404).json({ message: "Book not found" });
+	return res.status(204).json(updated);
 };
 
-export const deleteBook = (req: Request, res: Response) => {
-	const id = parseInt(req.params.id!);
-	const index = BookData.findIndex((b) => b.code === id);
-	if (index === -1) return res.status(404).json({ message: "Book not found" });
-
-	BookData.splice(index, 1);
+export const deleteBook = async (req: Request, res: Response) => {
+	const id = parseInt(req.params.id, 10);
+	const deleted = await bookService.delete(id);
+	if (!deleted) return res.status(404).json({ message: "Book not found" });
 	res.json({ message: "Book deleted" });
 };

@@ -1,10 +1,10 @@
 import { Router } from "express";
 import {
+	createBook,
+	deleteBook,
 	getBook,
 	getBookById,
-	createBook,
 	updateBook,
-	deleteBook,
 } from "../controllers/BookController";
 
 const router = Router();
