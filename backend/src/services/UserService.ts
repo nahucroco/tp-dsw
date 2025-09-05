@@ -1,6 +1,6 @@
-import type { IEntityService } from "./interfaces/IEntityService";
-import type { User } from "../models/User";
-import { generateId, users } from "../data/UserData";
+import type { IEntityService } from './interfaces/IEntityService';
+import type { User } from '../models/User';
+import { generateId, users } from '../data/UserData';
 
 export class UserService implements IEntityService<User> {
 	async getById(id: number): Promise<User | null> {

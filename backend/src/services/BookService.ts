@@ -1,6 +1,6 @@
-import type { Book } from "../models/Book";
-import type { IEntityService } from "./interfaces/IEntityService";
-import { generateId, books } from "../data/BookData";
+import type { Book } from '../models/Book';
+import type { IEntityService } from './interfaces/IEntityService';
+import { generateId, books } from '../data/BookData';
 
 export class BookService implements IEntityService<Book> {
 	async getById(id: number): Promise<Book | null> {

@@ -1,6 +1,6 @@
-import type { Request, Response } from "express";
-import { BookService } from "../services/BookService";
-import { validateBook } from "../schemas/BookSchema";
+import type { Request, Response } from 'express';
+import { BookService } from '../services/BookService';
+import { validateBook } from '../schemas/BookSchema';
 
 const bookService = new BookService();
 export const getBook = async (req: Request, res: Response) => {
@@ -11,7 +11,7 @@ export const getBook = async (req: Request, res: Response) => {
 export const getBookById = async (req: Request, res: Response) => {
 	const id = parseInt(req.params.id, 10);
 	const book = await bookService.getById(id);
-	if (!book) return res.status(404).json({ message: "Book not found" });
+	if (!book) return res.status(404).json({ message: 'Book not found' });
 	return res.json(book);
 };
 
@@ -33,16 +33,16 @@ export const updateBook = async (req: Request, res: Response) => {
 		return res.status(400).json({ error: JSON.parse(result.error.message) });
 	}
 	if (id !== entity.code) {
-		return res.status(400).json({ message: "Id mismatch" });
+		return res.status(400).json({ message: 'Id mismatch' });
 	}
 	const updated = await bookService.update(entity);
-	if (!updated) return res.status(404).json({ message: "Book not found" });
+	if (!updated) return res.status(404).json({ message: 'Book not found' });
 	return res.status(204).json(updated);
 };
 
 export const deleteBook = async (req: Request, res: Response) => {
 	const id = parseInt(req.params.id, 10);
 	const deleted = await bookService.delete(id);
-	if (!deleted) return res.status(404).json({ message: "Book not found" });
-	return res.json({ message: "Book deleted" });
+	if (!deleted) return res.status(404).json({ message: 'Book not found' });
+	return res.json({ message: 'Book deleted' });
 };
