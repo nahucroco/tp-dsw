@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { UserService } from '../services/UserService';
-import { validateUser } from '../schemas/UserSchema';
+import { validateUser } from '../schemas/UserSchema.js';
+import { UserService } from '../services/UserService.js';
 
 const userService = new UserService();
 export const getUser = async (req: Request, res: Response) => {

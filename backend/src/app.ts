@@ -1,7 +1,7 @@
 import express from 'express';
-import bookRoutes from './routes/bookRoutes';
-import reservaRoutes from './routes/reservaRoutes';
-import userRoutes from './routes/userRoutes';
+import bookRoutes from './routes/bookRoutes.js';
+import reservaRoutes from './routes/reservaRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 const app = express();
 

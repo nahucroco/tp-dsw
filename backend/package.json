@@ -5,9 +5,11 @@
 	"main": "index.js",
 	"scripts": {
 		"test": "ts-node-dev --respawn --transpile-only src/models/Book.ts",
-		"dev": "ts-node-dev --respawn --transpile-only src/server.ts",
+		"dev": "ts-node-dev --respawn --transpile-only src/index.ts",
 		"format": "npx @biomejs/biome format --write ./src",
-		"lint": "npx @biomejs/biome lint --write ./src"
+		"lint": "npx @biomejs/biome lint --write ./src",
+		"build": "tsc -p ./tsconfig.json",
+		"start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/index.js\""
 	},
 	"repository": {
 		"type": "git",
@@ -31,6 +33,7 @@
 		"@types/express": "^5.0.3",
 		"@types/node": "^24.1.0",
 		"ts-node-dev": "^2.0.0",
+		"tsc-watch": "^7.2.0",
 		"typescript": "^5.9.2"
 	}
 }

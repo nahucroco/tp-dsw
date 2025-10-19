@@ -1,4 +1,4 @@
-export interface IEntityService<T, ID = number> {
+export interface IEntityService<T> {
 	getById(id: number): Promise<T | null>;
 	getAll(): Promise<T[]>;
 	create(entity: T): Promise<void>;

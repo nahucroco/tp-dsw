@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { Book } from '../models/Book';
+import type { Book } from '../models/Book.js';
 
 const noEmpy = z
 	.string()

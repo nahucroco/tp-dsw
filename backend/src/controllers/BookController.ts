@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { BookService } from '../services/BookService';
-import { validateBook } from '../schemas/BookSchema';
+import { validateBook } from '../schemas/BookSchema.js';
+import { BookService } from '../services/BookService.js';
 
 const bookService = new BookService();
 export const getBook = async (req: Request, res: Response) => {

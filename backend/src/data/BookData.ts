@@ -1,4 +1,4 @@
-import type { Book } from '../models/Book';
+import type { Book } from '../models/Book.js';
 
 let currentId = 1;
 const books: Book[] = [];

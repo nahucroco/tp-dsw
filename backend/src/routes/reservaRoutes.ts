@@ -1,11 +1,11 @@
 import { Router } from 'express';
 import {
+	createReserva,
+	deleteReserva,
 	getReserva,
 	getReservaById,
-	createReserva,
 	updateReserva,
-	deleteReserva,
-} from '../controllers/ReservaController';
+} from '../controllers/ReservaController.js';
 
 const router = Router();
 
