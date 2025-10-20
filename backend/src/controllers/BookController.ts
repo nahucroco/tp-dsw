@@ -1,9 +1,11 @@
 import type { Request, Response } from 'express';
-import { validateBook } from '../schemas/BookSchema.js';
+import type { z } from 'zod';
+import { type BookSchema, validateBook } from '../schemas/BookSchema.js';
 import { BookService } from '../services/BookService.js';
 
+type BookInput = z.infer<typeof BookSchema>;
 const bookService = new BookService();
-export const getBook = async (req: Request, res: Response) => {
+export const getBook = async (res: Response) => {
 	const books = await bookService.getAll();
 	return res.json(books);
 };
@@ -16,13 +18,9 @@ export const getBookById = async (req: Request, res: Response) => {
 };
 
 export const createBook = async (req: Request, res: Response) => {
-	const entity = req.body;
-	const result = validateBook(entity);
-	if (result.error) {
-		return res.status(400).json({ error: JSON.parse(result.error.message) });
-	}
-	await bookService.create(entity);
-	return res.status(201).json(entity);
+	const input = req.body.sanitizedInput as BookInput;
+	await bookService.create(input);
+	return res.status(201).json(input);
 };
 
 export const updateBook = async (req: Request, res: Response) => {
