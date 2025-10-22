@@ -1,9 +1,8 @@
 import type { Request, Response } from 'express';
-import type { z } from 'zod';
-import { type BookSchema, validateBook } from '../schemas/BookSchema.js';
+import { Book } from '../models/Book.js';
+import { type BookInput, validateBook } from '../schemas/BookSchema.js';
 import { BookService } from '../services/BookService.js';
 
-type BookInput = z.infer<typeof BookSchema>;
 const bookService = new BookService();
 export const getBook = async (res: Response) => {
 	const books = await bookService.getAll();
@@ -11,16 +10,24 @@ export const getBook = async (res: Response) => {
 };
 
 export const getBookById = async (req: Request, res: Response) => {
-	const id = parseInt(req.params.id, 10);
-	const book = await bookService.getById(id);
-	if (!book) return res.status(404).json({ message: 'Book not found' });
-	return res.json(book);
+	try {
+		const id = parseInt(req.params.id, 10);
+		const book = await bookService.getById(id);
+		if (!book) return res.status(404).json({ message: 'Book not found' });
+		return res.status(200).json(book);
+	} catch (_e) {
+		return res.status(500).json({ message: 'internal error' });
+	}
 };
 
 export const createBook = async (req: Request, res: Response) => {
-	const input = req.body.sanitizedInput as BookInput;
-	await bookService.create(input);
-	return res.status(201).json(input);
+	try {
+		const input = req.body.sanitizedInput as BookInput;
+		const book = await bookService.create(input);
+		return res.status(201).json(book);
+	} catch (_e) {
+		return res.status(500).json({ message: 'internal error' });
+	}
 };
 
 export const updateBook = async (req: Request, res: Response) => {

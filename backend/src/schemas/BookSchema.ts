@@ -6,14 +6,17 @@ const noEmpty = z
 	.min(1)
 	.refine((x) => x.trim().length > 0, { error: 'the field cannot be empty' });
 const BookSchema = z.object({
-	code: z.number().int().positive(),
-	name: noEmpty,
-	author: noEmpty,
-	gender: noEmpty,
-	is_available: z.boolean(),
+	id: z.number().int().positive(),
+	title: noEmpty,
+	author: z.object({
+		id: z.number().int().positive(),
+	}),
+	gender: z.object({
+		id: z.number().int().positive(),
+	}),
 });
 function validateBook(obj: Book) {
 	return BookSchema.safeParse(obj);
 }
-
+export type BookInput = z.infer<typeof BookSchema>;
 export { validateBook, BookSchema };

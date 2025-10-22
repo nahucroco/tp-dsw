@@ -1,21 +1,13 @@
 import { NotFoundError } from '@mikro-orm/core';
 import { orm } from '../data/orm.js';
 import { Author } from '../models/Author.js';
-import { Book } from '../models/Book.js';
-import { Gender } from '../models/Gender.js';
-import type { BookInput } from '../schemas/BookSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';
 
 const em = orm.em;
-
-export class BookService implements IEntityService<Book, BookInput> {
-	async getById(id: number): Promise<Book | null> {
+export class AuthorService implements IEntityService<Author> {
+	async getById(id: number): Promise<Author | null> {
 		try {
-			return await em.findOneOrFail(
-				Book,
-				{ id: id },
-				{ populate: ['gender', 'author'] },
-			);
+			return await em.findOneOrFail(Author, { id: id });
 		} catch (e) {
 			console.error(`error getById: ${e}`);
 			if (e instanceof NotFoundError) {
@@ -24,36 +16,24 @@ export class BookService implements IEntityService<Book, BookInput> {
 			throw e;
 		}
 	}
-
-	async getAll(): Promise<Book[]> {
+	async getAll(): Promise<Author[]> {
 		try {
-			return await em.find(Book, {}, { populate: ['gender', 'author'] });
+			return await em.find(Author, {});
 		} catch (e) {
 			console.error(`error getAll: ${e}`);
 			return [];
 		}
 	}
-	async create(input: {
-		id: number;
-		title: string;
-		author: { id: number };
-		gender: { id: number };
-	}): Promise<Book> {
+	async create(entity: Author): Promise<void> {
 		try {
-			const book = new Book();
-			book.title = input.title;
-			book.author = em.getReference(Author, input.author.id);
-			book.gender = em.getReference(Gender, input.gender.id);
-			em.create(Book, book);
+			em.create(Author, entity);
 			await em.flush();
-			return book;
 		} catch (e) {
 			console.error(`error create: ${e}`);
 			throw e;
 		}
 	}
-
-	async update(entity: Book): Promise<boolean> {
+	async update(entity: Author): Promise<boolean> {
 		try {
 			const toUpdate = await this.getById(entity.id);
 			if (!toUpdate) {
@@ -76,7 +56,7 @@ export class BookService implements IEntityService<Book, BookInput> {
 			await em.removeAndFlush(toDelete);
 			return true;
 		} catch (e) {
-			console.error(`error deleting: ${e}`);
+			console.error(`error delete: ${e}`);
 			throw e;
 		}
 	}

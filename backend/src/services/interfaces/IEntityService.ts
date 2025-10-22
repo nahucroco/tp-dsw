@@ -1,7 +1,7 @@
-export interface IEntityService<T> {
+export interface IEntityService<T, TInput = T> {
 	getById(id: number): Promise<T | null>;
 	getAll(): Promise<T[]>;
-	create(entity: T): Promise<void>;
-	update(entity: T): Promise<boolean>;
+	create(input: TInput): Promise<T>;
+	update(input: TInput): Promise<boolean>;
 	delete(id: number): Promise<boolean>;
 }
