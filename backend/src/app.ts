@@ -6,8 +6,11 @@ import userRoutes from './routes/userRoutes.js';
 const app = express();
 
 app.use(express.json());
+
 app.use('/api/books', bookRoutes);
 app.use('/api/reservas', reservaRoutes);
 app.use('/api/users', userRoutes);
-
+app.use((_, res) => {
+	return res.status(404).send({ message: 'Not Found' });
+});
 export default app;
