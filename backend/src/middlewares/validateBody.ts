@@ -9,12 +9,11 @@ export function validateBody(schema: ZodType) {
 				path: issue.path,
 				message: issue.message,
 			}));
-			res.status(400).json({
+			return res.status(400).json({
 				message: 'Invalid input',
 				errors,
 			});
 		}
-
 		req.body.sanitizedInput = result.data;
 		next();
 	};
