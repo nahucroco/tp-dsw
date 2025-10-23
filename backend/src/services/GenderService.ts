@@ -1,10 +1,12 @@
 import { NotFoundError } from '@mikro-orm/core';
 import { orm } from '../data/orm.js';
 import { Gender } from '../models/Gender.js';
+import type { GenderInput } from '../schemas/GenderSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';
 
 const em = orm.em;
-export class GenderService implements IEntityService<Gender> {
+
+export class GenderService implements IEntityService<Gender, GenderInput> {
 	async getById(id: number): Promise<Gender | null> {
 		try {
 			return await em.findOneOrFail(Gender, { id });
@@ -26,23 +28,27 @@ export class GenderService implements IEntityService<Gender> {
 		}
 	}
 
-	async create(entity: Gender): Promise<void> {
+	async create(input: { id: number; description: string }): Promise<Gender> {
 		try {
-			em.create(Gender, entity);
+			const gender = new Gender();
+			gender.id = input.id;
+			gender.description = input.description;
+			em.create(Gender, gender);
 			await em.flush();
+			return gender;
 		} catch (e) {
 			console.error(`error create: ${e}`);
 			throw e;
 		}
 	}
 
-	async update(entity: Gender): Promise<boolean> {
+	async update(input: { id: number; description: string }): Promise<boolean> {
 		try {
-			const toUpdate = await this.getById(entity.id);
+			const toUpdate = await this.getById(input.id);
 			if (!toUpdate) {
 				return false;
 			}
-			em.assign(toUpdate, entity);
+			em.assign(toUpdate, input);
 			await em.flush();
 			return true;
 		} catch (e) {

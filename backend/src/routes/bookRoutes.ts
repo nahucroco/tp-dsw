@@ -14,7 +14,7 @@ const router = Router();
 router.get('/', getBook);
 router.get('/:id', getBookById);
 router.post('/', createBook, validateBody(BookSchema));
-router.put('/:id', updateBook);
+router.put('/:id', updateBook, validateBody(BookSchema));
 router.delete('/:id', deleteBook);
 
 export default router;

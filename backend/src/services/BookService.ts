@@ -41,6 +41,7 @@ export class BookService implements IEntityService<Book, BookInput> {
 	}): Promise<Book> {
 		try {
 			const book = new Book();
+			book.id = input.id;
 			book.title = input.title;
 			book.author = em.getReference(Author, input.author.id);
 			book.gender = em.getReference(Gender, input.gender.id);
@@ -53,13 +54,23 @@ export class BookService implements IEntityService<Book, BookInput> {
 		}
 	}
 
-	async update(entity: Book): Promise<boolean> {
+	async update(input: {
+		id: number;
+		title: string;
+		author: { id: number };
+		gender: { id: number };
+	}): Promise<boolean> {
 		try {
-			const toUpdate = await this.getById(entity.id);
+			const book = new Book();
+			book.id = input.id;
+			book.title = input.title;
+			book.author = em.getReference(Author, input.author.id);
+			book.gender = em.getReference(Gender, input.gender.id);
+			const toUpdate = await this.getById(book.id);
 			if (!toUpdate) {
 				return false;
 			}
-			em.assign(toUpdate, entity);
+			em.assign(toUpdate, book);
 			await em.flush();
 			return true;
 		} catch (e) {

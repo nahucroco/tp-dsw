@@ -1,10 +1,11 @@
 import { NotFoundError } from '@mikro-orm/core';
 import { orm } from '../data/orm.js';
 import { Author } from '../models/Author.js';
+import type { AuthorInput } from '../schemas/AuthorSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';
 
 const em = orm.em;
-export class AuthorService implements IEntityService<Author> {
+export class AuthorService implements IEntityService<Author, AuthorInput> {
 	async getById(id: number): Promise<Author | null> {
 		try {
 			return await em.findOneOrFail(Author, { id: id });
@@ -24,22 +25,29 @@ export class AuthorService implements IEntityService<Author> {
 			return [];
 		}
 	}
-	async create(entity: Author): Promise<void> {
+	async create(input: { id: number; name: string }): Promise<Author> {
 		try {
-			em.create(Author, entity);
+			const author = new Author();
+			author.id = input.id;
+			author.name = input.name;
+			em.create(Author, author);
 			await em.flush();
+			return author;
 		} catch (e) {
 			console.error(`error create: ${e}`);
 			throw e;
 		}
 	}
-	async update(entity: Author): Promise<boolean> {
+	async update(input: { id: number; name: string }): Promise<boolean> {
 		try {
-			const toUpdate = await this.getById(entity.id);
+			const author = new Author();
+			author.id = input.id;
+			author.name = input.name;
+			const toUpdate = await this.getById(author.id);
 			if (!toUpdate) {
 				return false;
 			}
-			em.assign(toUpdate, entity);
+			em.assign(toUpdate, author);
 			await em.flush();
 			return true;
 		} catch (e) {

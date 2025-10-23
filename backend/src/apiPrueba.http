@@ -20,7 +20,6 @@ PUT http://localhost:3000/api/books/1
 Content-Type: application/json
 
 {
-  "code": 1,
   "name": "Eso",
   "author": "stephen king",
   "gender": "terror",

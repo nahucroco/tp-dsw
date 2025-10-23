@@ -1,6 +1,5 @@
 import type { Request, Response } from 'express';
-import { Book } from '../models/Book.js';
-import { type BookInput, validateBook } from '../schemas/BookSchema.js';
+import type { BookInput } from '../schemas/BookSchema.js';
 import { BookService } from '../services/BookService.js';
 
 const bookService = new BookService();
@@ -31,23 +30,27 @@ export const createBook = async (req: Request, res: Response) => {
 };
 
 export const updateBook = async (req: Request, res: Response) => {
-	const id = parseInt(req.params.id, 10);
-	const entity = req.body;
-	const result = validateBook(entity);
-	if (result.error) {
-		return res.status(400).json({ error: JSON.parse(result.error.message) });
+	try {
+		const id = parseInt(req.params.id, 10);
+		const input = req.body.sanitizedInput as BookInput;
+		if (id !== input.id) {
+			return res.status(400).json({ message: 'Id mismatch' });
+		}
+		const updated = await bookService.update(input);
+		if (!updated) return res.status(404).json({ message: 'Book not found' });
+		return res.status(204).json({ message: 'Book updated successfully' });
+	} catch (_e) {
+		return res.status(500).json({ message: 'internal error' });
 	}
-	if (id !== entity.code) {
-		return res.status(400).json({ message: 'Id mismatch' });
-	}
-	const updated = await bookService.update(entity);
-	if (!updated) return res.status(404).json({ message: 'Book not found' });
-	return res.status(204).json(updated);
 };
 
 export const deleteBook = async (req: Request, res: Response) => {
-	const id = parseInt(req.params.id, 10);
-	const deleted = await bookService.delete(id);
-	if (!deleted) return res.status(404).json({ message: 'Book not found' });
-	return res.json({ message: 'Book deleted' });
+	try {
+		const id = parseInt(req.params.id, 10);
+		const deleted = await bookService.delete(id);
+		if (!deleted) return res.status(404).json({ message: 'Book not found' });
+		return res.status(204).json({ message: 'Book deleted' });
+	} catch (_e) {
+		return res.status(500).json({ message: 'internal error' });
+	}
 };
