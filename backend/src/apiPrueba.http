@@ -2,17 +2,21 @@
 GET http://localhost:3000/api/books
 ###
 ### GET book by id
-GET http://localhost:3000/api/books/89
+GET http://localhost:3000/api/books/1
 ###
 ### Create book
 POST http://localhost:3000/api/books
 Content-Type: application/json
 
 {
-  "name": " as",
-  "author": "jk",
-  "gender": "terror",
-  "is_available": true
+  "id": 1,
+  "title": "Eso",
+  "author": {
+    "id": 1
+  },
+  "gender": {
+    "id": 1
+  }
 }
 ###
 ### Updated book
@@ -21,47 +25,63 @@ Content-Type: application/json
 
 {
   "name": "Eso",
-  "author": "stephen king",
-  "gender": "terror",
-  "is_available": true
+  "author": 1,
+  "gender": 1
 }
 ###
 
 ### Delete book
 DELETE http://localhost:3000/api/books/1
 
-### Get all users
-GET http://localhost:3000/api/users
+
+### Get all authors
+GET http://localhost:3000/api/authors
 ###
-
-### Get user by id
-GET http://localhost:3000/api/users/1
+### Get author by id
+GET http://localhost:3000/api/authors/1
 ###
-
-### Create user
-POST http://localhost:3000/api/users
-Content-Type: application/json
-
-{
-  "fullName": "lucio albanesi",
-  "username": "lucioalba",
-  "password": "123",
-  "email": "lucioalba02@gm"
-}
-###
-
-### Update user
-PUT http://localhost:3000/api/users/1
+### Create author
+POST http://localhost:3000/api/authors
 Content-Type: application/json
 
 {
   "id": 1,
-  "fullName": "lucio albanesi",
-  "username": "lucioalba",
-  "password": "456",
-  "email": "lucioalba02@gmai.com"
+  "name": "Stephen Kong"
 }
 ###
+### Update author
+PUT http://localhost:3000/api/authors/1
+Content-Type: application/json
 
-### Delete user
-DELETE http://localhost:3000/api/users/1
+{
+  "name": "Stephen King"
+}
+###
+### Delete author
+DELETE http://localhost:3000/api/authors/1
+
+### Get all genders
+GET http://localhost:3000/api/genders
+###
+### Get gender by id
+GET http://localhost:3000/api/genders/1
+###
+### Create gender
+POST http://localhost:3000/api/genders
+Content-Type: application/json
+
+{
+  "id": 1,
+  "description": "COmedia"
+}
+###
+### Update gender
+PUT http://localhost:3000/api/genders/1
+Content-Type: application/json
+
+{
+  "description": "Horror"
+}
+###
+### Delete gender
+DELETE http://localhost:3000/api/genders/1

@@ -25,10 +25,9 @@ export class AuthorService implements IEntityService<Author, AuthorInput> {
 			return [];
 		}
 	}
-	async create(input: { id: number; name: string }): Promise<Author> {
+	async create(input: { name: string }): Promise<Author> {
 		try {
 			const author = new Author();
-			author.id = input.id;
 			author.name = input.name;
 			em.create(Author, author);
 			await em.flush();

@@ -13,8 +13,8 @@ const router = Router();
 
 router.get('/', getGenders);
 router.get('/:id', getGenderById);
-router.post('/', createGender, validateBody(GenderSchema));
-router.put('/:id', updateGender, validateBody(GenderSchema));
+router.post('/', validateBody(GenderSchema), createGender);
+router.put('/:id', validateBody(GenderSchema), updateGender);
 router.delete('/:id', deleteGender);
 
 export default router;

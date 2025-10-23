@@ -1,4 +1,4 @@
-import { generateId, users } from '../data/UserData.js';
+/*import { generateId, users } from '../data/UserData.js';
 import type { User } from '../models/User.js';
 import type { IEntityService } from './interfaces/IEntityService.js';
 
@@ -28,3 +28,4 @@ export class UserService implements IEntityService<User> {
 		return true;
 	}
 }
+*/

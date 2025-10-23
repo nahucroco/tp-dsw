@@ -13,8 +13,8 @@ const router = Router();
 
 router.get('/', getAuthors);
 router.get('/:id', getAuthorById);
-router.post('/', createAuthor, validateBody(AuthorSchema));
-router.put('/:id', updateAuthor, validateBody(AuthorSchema));
+router.post('/', validateBody(AuthorSchema), createAuthor);
+router.put('/:id', validateBody(AuthorSchema), updateAuthor);
 router.delete('/:id', deleteAuthor);
 
 export default router;

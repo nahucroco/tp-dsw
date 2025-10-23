@@ -34,14 +34,12 @@ export class BookService implements IEntityService<Book, BookInput> {
 		}
 	}
 	async create(input: {
-		id: number;
 		title: string;
 		author: { id: number };
 		gender: { id: number };
 	}): Promise<Book> {
 		try {
 			const book = new Book();
-			book.id = input.id;
 			book.title = input.title;
 			book.author = em.getReference(Author, input.author.id);
 			book.gender = em.getReference(Gender, input.gender.id);

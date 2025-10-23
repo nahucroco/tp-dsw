@@ -1,3 +1,4 @@
+/*
 import type { Request, Response } from 'express';
 import { validateUser } from '../schemas/UserSchema.js';
 import { UserService } from '../services/UserService.js';
@@ -44,4 +45,4 @@ export const deleteUser = async (req: Request, res: Response) => {
 	const deleted = await userService.delete(id);
 	if (!deleted) return res.status(404).json({ message: 'User not found' });
 	return res.json({ message: 'User deleted' });
-};
+};*/

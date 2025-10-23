@@ -1,4 +1,4 @@
-import { Router } from 'express';
+/*import { Router } from 'express';
 import {
 	createReserva,
 	deleteReserva,
@@ -16,3 +16,4 @@ router.put('/:id', updateReserva);
 router.delete('/:id', deleteReserva);
 
 export default router;
+*/

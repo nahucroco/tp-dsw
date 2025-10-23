@@ -28,10 +28,9 @@ export class GenderService implements IEntityService<Gender, GenderInput> {
 		}
 	}
 
-	async create(input: { id: number; description: string }): Promise<Gender> {
+	async create(input: { description: string }): Promise<Gender> {
 		try {
 			const gender = new Gender();
-			gender.id = input.id;
 			gender.description = input.description;
 			em.create(Gender, gender);
 			await em.flush();

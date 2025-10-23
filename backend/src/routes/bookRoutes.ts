@@ -13,8 +13,8 @@ const router = Router();
 
 router.get('/', getBook);
 router.get('/:id', getBookById);
-router.post('/', createBook, validateBody(BookSchema));
-router.put('/:id', updateBook, validateBody(BookSchema));
+router.post('/', validateBody(BookSchema), createBook);
+router.put('/:id', validateBody(BookSchema), updateBook);
 router.delete('/:id', deleteBook);
 
 export default router;

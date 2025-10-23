@@ -1,3 +1,4 @@
+/*
 import type { Request, Response } from 'express';
 import ReservaData from '../data/ReservaData.js';
 import { Reserva } from '../models/Reserva.js';
@@ -51,3 +52,4 @@ export const deleteReserva = (req: Request, res: Response) => {
 	ReservaData.splice(index, 1);
 	res.json({ message: 'Reserva deleted' });
 };
+*/

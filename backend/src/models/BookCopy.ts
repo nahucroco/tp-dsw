@@ -1,10 +1,12 @@
-import { ManyToOne, Property } from '@mikro-orm/core';
+import { Entity, ManyToOne, Property, type Rel } from '@mikro-orm/core';
 import { Book } from './Book.js';
 import { BusinessEntity } from './BusinessEntity.js';
 
+@Entity()
 export class BookCopy extends BusinessEntity {
 	@Property({ nullable: false })
-	is_available: true | false = true;
+	is_available: boolean = true;
+
 	@ManyToOne(() => Book, { nullable: false })
-	book!: Book;
+	book!: Rel<Book>;
 }

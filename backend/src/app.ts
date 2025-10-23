@@ -5,8 +5,6 @@ import { orm, syncSchema } from './data/orm.js';
 import authorRoutes from './routes/authorRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
 import genderRoutes from './routes/genderRoutes.js';
-import reservaRoutes from './routes/reservaRoutes.js';
-import userRoutes from './routes/userRoutes.js';
 
 const app = express();
 
@@ -16,8 +14,6 @@ app.use((_req, _res, next) => {
 });
 await syncSchema(); // only in dev;
 app.use('/api/books', bookRoutes);
-app.use('/api/reservas', reservaRoutes);
-app.use('/api/users', userRoutes);
 app.use('/api/authors', authorRoutes);
 app.use('/api/genders', genderRoutes);
 app.use((_, res) => {
