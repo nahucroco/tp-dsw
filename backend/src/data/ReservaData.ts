@@ -1,4 +1,4 @@
-import type { Reserva } from '../models/Reserva';
+import type { Reserva } from '../models/Reserva.js';
 
 const reservas: Reserva[] = [];
 
