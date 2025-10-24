@@ -8,6 +8,7 @@ import GenerosPage from "./pages/GenerosPage";
 import LibrosPage from "./pages/LibrosPage";
 import PrestamosPage from "./pages/PrestamosPage";
 import UsuariosPage from "./pages/UsuariosPage";
+import "./styles.css";
 
 function App() {
   return (

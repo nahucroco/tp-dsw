@@ -74,6 +74,9 @@ function LibrosPage() {
     setEditando(libro.id);
   };
 
+  // Ordenar libros por género (alfabéticamente)
+  const librosOrdenados = [...libros].sort((a, b) => a.genero.localeCompare(b.genero));
+
   return (
     <div className="col-md-10 mx-auto">
       <h2 className="mb-4 text-center">Libros</h2>
@@ -132,23 +135,37 @@ function LibrosPage() {
           </tr>
         </thead>
         <tbody>
-          {libros.map((libro) => (
-            <tr key={libro.id}>
-              <td>{libro.titulo}</td>
-              <td>{libro.autor}</td>
-              <td>{libro.editorial}</td>
-              <td>{libro.genero}</td>
-              <td className="text-end">
-                <button className="btn btn-warning btn-sm me-2" onClick={() => manejarEditar(libro)}>
-                  Editar
-                </button>
-                <button className="btn btn-danger btn-sm" onClick={() => manejarEliminar(libro.id)}>
-                  Eliminar
-                </button>
-              </td>
-            </tr>
-          ))}
+          {librosOrdenados.map((libro, index) => {
+            const mostrarCabecera =
+              index === 0 || libro.genero !== librosOrdenados[index - 1].genero;
+            return (
+              <>
+                {mostrarCabecera && (
+                  <tr className="table-secondary">
+                    <td colSpan="5" className="fw-bold text-center">
+                      {libro.genero}
+                    </td>
+                  </tr>
+                )}
+                <tr key={libro.id}>
+                  <td>{libro.titulo}</td>
+                  <td>{libro.autor}</td>
+                  <td>{libro.editorial}</td>
+                  <td>{libro.genero}</td>
+                  <td className="text-end">
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => manejarEditar(libro)}>
+                      Editar
+                    </button>
+                    <button className="btn btn-danger btn-sm" onClick={() => manejarEliminar(libro.id)}>
+                      Eliminar
+                    </button>
+                  </td>
+                </tr>
+              </>
+            );
+          })}
         </tbody>
+
       </table>
     </div>
   );
