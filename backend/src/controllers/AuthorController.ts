@@ -4,7 +4,7 @@ import { AuthorService } from '../services/AuthorService.js';
 
 const authorService = new AuthorService();
 
-export const getAuthors = async (res: Response) => {
+export const getAuthors = async (_req: Request, res: Response) => {
 	try {
 		const authors = await authorService.getAll();
 		return res.json(authors);
