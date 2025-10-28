@@ -3,7 +3,7 @@ import type { BookInput } from '../schemas/BookSchema.js';
 import { BookService } from '../services/BookService.js';
 
 const bookService = new BookService();
-export const getBook = async (res: Response) => {
+export const getBook = async (_req: Request, res: Response) => {
 	const books = await bookService.getAll();
 	return res.json(books);
 };

@@ -4,7 +4,7 @@ import { GenderService } from '../services/GenderService.js';
 
 const genderService = new GenderService();
 
-export const getGenders = async (res: Response) => {
+export const getGenders = async (_req: Request, res: Response) => {
 	try {
 		const genders = await genderService.getAll();
 		return res.json(genders);
