@@ -1,121 +1,93 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import api from "../api/axiosConfig";
 
 function LibrosPage() {
   const [libros, setLibros] = useState([]);
   const [autores, setAutores] = useState([]);
-  const [editoriales, setEditoriales] = useState([]);
   const [generos, setGeneros] = useState([]);
 
   const [titulo, setTitulo] = useState("");
   const [autorId, setAutorId] = useState("");
-  const [editorialId, setEditorialId] = useState("");
   const [generoId, setGeneroId] = useState("");
   const [editando, setEditando] = useState(null);
 
-  useEffect(() => {
-    cargarLibros();
-    cargarListas();
-  }, []);
-
   const cargarLibros = async () => {
-    // ⚠️ Simulación temporal hasta conectar backend
-    setLibros([
-      { id: 1, titulo: "Cien años de soledad", autor: "Gabriel García Márquez", genero: "Realismo mágico", editorial: "Sudamericana" },
-    ]);
+    const { data } = await api.get("/books");
+    setLibros(data);
   };
 
   const cargarListas = async () => {
-    // ⚠️ Simulaciones
-    setAutores([{ id: 1, nombre: "García Márquez" }, { id: 2, nombre: "Borges" }]);
-    setEditoriales([{ id: 1, nombre: "Planeta" }, { id: 2, nombre: "Alianza" }]);
-    setGeneros([{ id: 1, nombre: "Ficción" }, { id: 2, nombre: "Ensayo" }]);
+    const [a, g] = await Promise.all([api.get("/authors"), api.get("/genders")]);
+    setAutores(a.data);
+    setGeneros(g.data);
   };
+
+  useEffect(() => { cargarLibros(); cargarListas(); }, []);
 
   const manejarSubmit = async (e) => {
     e.preventDefault();
-    if (!titulo || !autorId || !editorialId || !generoId) return;
+    if (!titulo || !autorId || !generoId) return;
 
-    const autorNombre = autores.find((a) => a.id === parseInt(autorId))?.nombre;
-    const editorialNombre = editoriales.find((e) => e.id === parseInt(editorialId))?.nombre;
-    const generoNombre = generos.find((g) => g.id === parseInt(generoId))?.nombre;
+    const payload = {
+      id: editando ?? Math.max(1, (libros.length ? Math.max(...libros.map(l => l.id)) + 1 : 1)),
+      title: titulo,
+      author: { id: Number(autorId) },
+      gender: { id: Number(generoId) },
+    };
 
     if (editando) {
-      setLibros(libros.map((l) =>
-        l.id === editando ? { ...l, titulo, autor: autorNombre, editorial: editorialNombre, genero: generoNombre } : l
-      ));
+      await api.put(`/books/${editando}`, payload);
       setEditando(null);
     } else {
-      const nuevo = {
-        id: Date.now(),
-        titulo,
-        autor: autorNombre,
-        editorial: editorialNombre,
-        genero: generoNombre,
-      };
-      setLibros([...libros, nuevo]);
+      await api.post("/books", payload);
     }
 
-    setTitulo("");
-    setAutorId("");
-    setEditorialId("");
-    setGeneroId("");
+    setTitulo(""); setAutorId(""); setGeneroId("");
+    await cargarLibros();
   };
 
-  const manejarEliminar = (id) => {
-    setLibros(libros.filter((l) => l.id !== id));
+  const manejarEliminar = async (id) => {
+    await api.delete(`/books/${id}`);
+    await cargarLibros();
   };
 
   const manejarEditar = (libro) => {
-    setTitulo(libro.titulo);
-    setAutorId(autores.find((a) => a.nombre === libro.autor)?.id || "");
-    setEditorialId(editoriales.find((e) => e.nombre === libro.editorial)?.id || "");
-    setGeneroId(generos.find((g) => g.nombre === libro.genero)?.id || "");
+    setTitulo(libro.title);
+    setAutorId(libro.author?.id ?? "");
+    setGeneroId(libro.gender?.id ?? "");
     setEditando(libro.id);
   };
 
-  // Ordenar libros por género (alfabéticamente)
-  const librosOrdenados = [...libros].sort((a, b) => a.genero.localeCompare(b.genero));
+  const librosOrdenados = [...libros].sort((a, b) =>
+    (a.gender?.description ?? "").localeCompare(b.gender?.description ?? "")
+  );
 
   return (
     <div className="col-md-10 mx-auto">
       <h2 className="mb-4 text-center">Libros</h2>
 
-      {/* Formulario */}
       <form onSubmit={manejarSubmit} className="mb-4">
         <div className="row g-3">
-          <div className="col-md-4">
-            <input
-              type="text"
-              className="form-control"
-              placeholder="Título del libro"
-              value={titulo}
-              onChange={(e) => setTitulo(e.target.value)}
-            />
+          <div className="col-md-6 col-lg-4">
+            <input type="text" className="form-control" placeholder="Título del libro"
+              value={titulo} onChange={(e) => setTitulo(e.target.value)} />
           </div>
 
-          <div className="col-md-2">
+          <div className="col-md-3 col-lg-3">
             <select className="form-select" value={autorId} onChange={(e) => setAutorId(e.target.value)}>
               <option value="">Autor</option>
-              {autores.map((a) => <option key={a.id} value={a.id}>{a.nombre}</option>)}
+              {autores.map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}
             </select>
           </div>
 
-          <div className="col-md-2">
-            <select className="form-select" value={editorialId} onChange={(e) => setEditorialId(e.target.value)}>
-              <option value="">Editorial</option>
-              {editoriales.map((e) => <option key={e.id} value={e.id}>{e.nombre}</option>)}
-            </select>
-          </div>
-
-          <div className="col-md-2">
+          <div className="col-md-3 col-lg-3">
             <select className="form-select" value={generoId} onChange={(e) => setGeneroId(e.target.value)}>
               <option value="">Género</option>
-              {generos.map((g) => <option key={g.id} value={g.id}>{g.nombre}</option>)}
+              {generos.map((g) => <option key={g.id} value={g.id}>{g.description}</option>)}
             </select>
           </div>
 
-          <div className="col-md-2">
+          <div className="col-md-12 col-lg-2">
             <button className="btn btn-primary w-100" type="submit">
               {editando ? "Actualizar" : "Agregar"}
             </button>
@@ -123,49 +95,34 @@ function LibrosPage() {
         </div>
       </form>
 
-      {/* Tabla */}
       <table className="table table-striped">
         <thead>
-          <tr>
-            <th>Título</th>
-            <th>Autor</th>
-            <th>Editorial</th>
-            <th>Género</th>
-            <th className="text-end">Acciones</th>
-          </tr>
+          <tr><th>Título</th><th>Autor</th><th>Género</th><th className="text-end">Acciones</th></tr>
         </thead>
         <tbody>
-          {librosOrdenados.map((libro, index) => {
-            const mostrarCabecera =
-              index === 0 || libro.genero !== librosOrdenados[index - 1].genero;
+          {librosOrdenados.map((libro, i) => {
+            const curr = libro.gender?.description ?? "Sin género";
+            const prev = i > 0 ? (librosOrdenados[i - 1].gender?.description ?? "Sin género") : null;
+            const header = i === 0 || curr !== prev;
+
             return (
-              <>
-                {mostrarCabecera && (
-                  <tr className="table-secondary">
-                    <td colSpan="5" className="fw-bold text-center">
-                      {libro.genero}
-                    </td>
-                  </tr>
+              <Fragment key={`g-${curr}-${libro.id}`}>
+                {header && (
+                  <tr className="table-secondary"><td colSpan="4" className="fw-bold text-center">{curr}</td></tr>
                 )}
-                <tr key={libro.id}>
-                  <td>{libro.titulo}</td>
-                  <td>{libro.autor}</td>
-                  <td>{libro.editorial}</td>
-                  <td>{libro.genero}</td>
+                <tr>
+                  <td>{libro.title}</td>
+                  <td>{libro.author?.name ?? "-"}</td>
+                  <td>{libro.gender?.description ?? "-"}</td>
                   <td className="text-end">
-                    <button className="btn btn-warning btn-sm me-2" onClick={() => manejarEditar(libro)}>
-                      Editar
-                    </button>
-                    <button className="btn btn-danger btn-sm" onClick={() => manejarEliminar(libro.id)}>
-                      Eliminar
-                    </button>
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => manejarEditar(libro)}>Editar</button>
+                    <button className="btn btn-danger btn-sm" onClick={() => manejarEliminar(libro.id)}>Eliminar</button>
                   </td>
                 </tr>
-              </>
+              </Fragment>
             );
           })}
         </tbody>
-
       </table>
     </div>
   );
