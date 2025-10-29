@@ -6,46 +6,36 @@ function AutoresPage() {
   const [nombre, setNombre] = useState("");
   const [editando, setEditando] = useState(null);
 
-  // Cargar autores al montar el componente
-  useEffect(() => {
-    cargarAutores();
-  }, []);
-
-  // Simulación temporal sin backend
   const cargarAutores = async () => {
-    // ⚠️ Cuando tengan el endpoint real, reemplazá esto por:
-    // const res = await api.get("/autores");
-    // setAutores(res.data);
-    setAutores([
-      { id: 1, nombre: "Gabriel García Márquez" },
-      { id: 2, nombre: "Jorge Luis Borges" },
-    ]);
+    const res = await api.get("/authors");
+    setAutores(res.data);
   };
+
+  useEffect(() => { cargarAutores(); }, []);
 
   const manejarSubmit = async (e) => {
     e.preventDefault();
-    if (nombre.trim() === "") return;
+    if (!nombre.trim()) return;
 
     if (editando) {
-      // await api.put(`/autores/${editando}`, { nombre });
-      setAutores(autores.map((a) => (a.id === editando ? { ...a, nombre } : a)));
+      await api.put(`/authors/${editando}`, { id: editando, name: nombre });
       setEditando(null);
     } else {
-      // await api.post("/autores", { nombre });
-      const nuevoAutor = { id: Date.now(), nombre };
-      setAutores([...autores, nuevoAutor]);
+      // tu back exige id > 0
+      const nextId = autores.length ? Math.max(...autores.map(a => a.id)) + 1 : 1;
+      await api.post("/authors", { id: nextId, name: nombre });
     }
-
     setNombre("");
+    await cargarAutores();
   };
 
   const manejarEliminar = async (id) => {
-    // await api.delete(`/autores/${id}`);
-    setAutores(autores.filter((a) => a.id !== id));
+    await api.delete(`/authors/${id}`);
+    await cargarAutores();
   };
 
   const manejarEditar = (autor) => {
-    setNombre(autor.nombre);
+    setNombre(autor.name);
     setEditando(autor.id);
   };
 
@@ -53,7 +43,6 @@ function AutoresPage() {
     <div className="col-md-8 mx-auto">
       <h2 className="mb-3 text-center">Autores</h2>
 
-      {/* Formulario */}
       <form onSubmit={manejarSubmit} className="mb-4">
         <div className="input-group">
           <input
@@ -69,27 +58,13 @@ function AutoresPage() {
         </div>
       </form>
 
-      {/* Listado */}
       <ul className="list-group">
-        {autores.map((autor) => (
-          <li
-            key={autor.id}
-            className="list-group-item d-flex justify-content-between align-items-center"
-          >
-            <span>{autor.nombre}</span>
+        {autores.map((a) => (
+          <li key={a.id} className="list-group-item d-flex justify-content-between align-items-center">
+            <span>{a.name}</span>
             <div>
-              <button
-                className="btn btn-sm btn-warning me-2"
-                onClick={() => manejarEditar(autor)}
-              >
-                Editar
-              </button>
-              <button
-                className="btn btn-sm btn-danger"
-                onClick={() => manejarEliminar(autor.id)}
-              >
-                Eliminar
-              </button>
+              <button className="btn btn-sm btn-warning me-2" onClick={() => manejarEditar(a)}>Editar</button>
+              <button className="btn btn-sm btn-danger" onClick={() => manejarEliminar(a.id)}>Eliminar</button>
             </div>
           </li>
         ))}
@@ -97,5 +72,4 @@ function AutoresPage() {
     </div>
   );
 }
-
 export default AutoresPage;
