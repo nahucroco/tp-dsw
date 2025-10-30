@@ -28,7 +28,11 @@ export const createUser = async (req: Request, res: Response) => {
 	try {
 		const input = req.body.sanitizedInput as UserInput;
 		const user = await userService.create(input);
-        const publicUser = {id: user.id,username: user.username, person: user.person};
+		const publicUser = {
+			id: user.id,
+			username: user.username,
+			person: user.person,
+		};
 		return res.status(201).json(publicUser);
 	} catch {
 		return res.status(500).json({ message: 'internal error' });

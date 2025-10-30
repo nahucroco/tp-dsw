@@ -1,3 +1,4 @@
+import { NotFoundError } from '@mikro-orm/core';
 import type { NextFunction, Request, Response } from 'express';
 import { orm } from '../data/orm.js';
 import { BookCopy } from '../models/BookCopy.js';
@@ -17,7 +18,7 @@ export const validateBookCopiesAvailability = async (
 		const unavailable: number[] = [];
 
 		for (const ref of bookCopies) {
-			const copy = await em.findOne(BookCopy, { id: ref.id });
+			const copy = await em.findOneOrFail(BookCopy, { id: ref.id });
 			if (!copy || !copy.is_available) {
 				unavailable.push(ref.id);
 			}
@@ -32,6 +33,10 @@ export const validateBookCopiesAvailability = async (
 
 		next();
 	} catch (e) {
+		if (e instanceof NotFoundError) {
+			console.error(`book copy doesn't exist: ${e}`);
+			return res.status(400).json({ error: 'book copy doesnt exist' });
+		}
 		console.error(`unexpected error: ${e}`);
 		return res.status(500).json({ message: 'internal error' });
 	}

@@ -161,7 +161,7 @@ Content-Type: application/json
   },
   "bookCopies": [
 
-    { "id": 5 }
+    { "id": 10 }
   ]
 }
 ###

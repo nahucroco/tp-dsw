@@ -7,8 +7,10 @@ import bookCopyRoutes from './routes/bookCopyRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
 import genderRoutes from './routes/genderRoutes.js';
 import cors from 'cors';
-import loanRoutes from "./routes/loanRoutes.js";
+import loanRoutes from './routes/loanRoutes.js';
 import personRoutes from './routes/personRoutes.js';
+import publisherRoutes from './routes/publisherRoutes.js';
+import sanctionRoutes from './routes/sanctionRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 const app = express();
 app.use(
@@ -45,6 +47,8 @@ app.use('/api/book_copies', bookCopyRoutes);
 app.use('/api/persons', personRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/loans', loanRoutes);
+app.use('/api/publishers', publisherRoutes);
+app.use('/api/sanctions', sanctionRoutes);
 app.use((_req: express.Request, res: express.Response) => {
 	return res.status(404).send({ message: 'Not Found' });
 });
