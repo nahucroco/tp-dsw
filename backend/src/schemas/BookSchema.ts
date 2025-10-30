@@ -5,7 +5,7 @@ const noEmpty = z
 	.min(1)
 	.refine((x) => x.trim().length > 0, { error: 'the field cannot be empty' });
 const BookSchema = z.object({
-	id: z.number().int().positive(),
+	id: z.number().int(),
 	title: noEmpty,
 	author: z.object({
 		id: z.number().int().positive(),

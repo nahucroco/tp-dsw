@@ -2,7 +2,7 @@ import { z } from 'zod';
 import { BookCondition } from '../enums/BookCondition.js';
 
 const BookCopySchema = z.object({
-	id: z.number().int().positive(),
+	id: z.number().int(),
 	is_available: z.boolean(),
 	condition: z.enum(BookCondition),
 	book: z.object({

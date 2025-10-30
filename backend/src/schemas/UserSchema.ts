@@ -1,18 +1,19 @@
 import { z } from 'zod';
-import type { User } from '../models/User.js';
 
-const noEmpy = z
-	.string()
-	.min(1)
-	.refine((x) => x.trim().length > 0, { error: 'the field cannot be empty' });
 const UserSchema = z.object({
-	//id: z.number(),
-	fullName: noEmpy,
-	username: noEmpy,
-	password: noEmpy,
-	email: z.email(),
+	id: z.number().int(),
+	username: z.string().min(1),
+	password: z
+		.string()
+		.min(6)
+		.regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+		.regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+		.regex(/[0-9]/, 'Password must contain at least one number'),
+	person: z.object({
+		id: z.number().int().positive(),
+	}),
 });
-function validateUser(obj: User) {
-	return UserSchema.safeParse(obj);
-}
-export { validateUser };
+
+export type UserInput = z.infer<typeof UserSchema>;
+
+export { UserSchema };

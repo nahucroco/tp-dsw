@@ -8,7 +8,11 @@ const em = orm.em;
 export class AuthorService implements IEntityService<Author, AuthorInput> {
 	async getById(id: number): Promise<Author | null> {
 		try {
-			return await em.findOneOrFail(Author, { id: id });
+			return await em.findOneOrFail(
+				Author,
+				{ id: id },
+				{ populate: ['books'] },
+			);
 		} catch (e) {
 			console.error(`error getById: ${e}`);
 			if (e instanceof NotFoundError) {
@@ -25,7 +29,7 @@ export class AuthorService implements IEntityService<Author, AuthorInput> {
 			return [];
 		}
 	}
-	async create(input: { name: string }): Promise<Author> {
+	async create(input: AuthorInput): Promise<Author> {
 		try {
 			const author = new Author();
 			author.name = input.name;
@@ -37,15 +41,16 @@ export class AuthorService implements IEntityService<Author, AuthorInput> {
 			throw e;
 		}
 	}
-	async update(input: { id: number; name: string }): Promise<boolean> {
+	async update(input: AuthorInput): Promise<boolean> {
 		try {
-			const author = new Author();
-			author.id = input.id;
-			author.name = input.name;
-			const toUpdate = await this.getById(author.id);
+			const toUpdate = await this.getById(input.id);
 			if (!toUpdate) {
 				return false;
 			}
+			const author = new Author();
+			author.id = input.id;
+			author.name = input.name;
+
 			em.assign(toUpdate, author);
 			await em.flush();
 			return true;

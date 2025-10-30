@@ -33,11 +33,7 @@ export class BookService implements IEntityService<Book, BookInput> {
 			return [];
 		}
 	}
-	async create(input: {
-		title: string;
-		author: { id: number };
-		gender: { id: number };
-	}): Promise<Book> {
+	async create(input: BookInput): Promise<Book> {
 		try {
 			const book = new Book();
 			book.title = input.title;
@@ -52,22 +48,17 @@ export class BookService implements IEntityService<Book, BookInput> {
 		}
 	}
 
-	async update(input: {
-		id: number;
-		title: string;
-		author: { id: number };
-		gender: { id: number };
-	}): Promise<boolean> {
+	async update(input: BookInput): Promise<boolean> {
 		try {
-			const book = new Book();
-			book.id = input.id;
-			book.title = input.title;
-			book.author = em.getReference(Author, input.author.id);
-			book.gender = em.getReference(Gender, input.gender.id);
-			const toUpdate = await this.getById(book.id);
+			const toUpdate = await this.getById(input.id);
 			if (!toUpdate) {
 				return false;
 			}
+			const book = new Book();
+			book.title = input.title;
+			book.author = em.getReference(Author, input.author.id);
+			book.gender = em.getReference(Gender, input.gender.id);
+
 			em.assign(toUpdate, book);
 			await em.flush();
 			return true;

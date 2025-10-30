@@ -31,15 +31,11 @@ export class BookCopyService
 		}
 	}
 
-	async create(input: {
-		is_available: boolean;
-		condition: string;
-		book: { id: number };
-	}): Promise<BookCopy> {
+	async create(input: BookCopyInput): Promise<BookCopy> {
 		try {
 			const copy = new BookCopy();
 			copy.is_available = input.is_available;
-			copy.condition = input.condition as any;
+			copy.condition = input.condition;
 			copy.book = em.getReference(Book, input.book.id);
 			em.create(BookCopy, copy);
 			await em.flush();
@@ -50,22 +46,17 @@ export class BookCopyService
 		}
 	}
 
-	async update(input: {
-		id: number;
-		is_available: boolean;
-		condition: string;
-		book: { id: number };
-	}): Promise<boolean> {
+	async update(input: BookCopyInput): Promise<boolean> {
 		try {
 			const toUpdate = await this.getById(input.id);
 			if (!toUpdate) {
 				return false;
 			}
-			em.assign(toUpdate, {
-				is_available: input.is_available,
-				condition: input.condition as any,
-				book: em.getReference(Book, input.book.id),
-			});
+			const copy = new BookCopy();
+			copy.is_available = input.is_available;
+			copy.condition = input.condition;
+			copy.book = em.getReference(Book, input.book.id);
+			em.assign(toUpdate, copy);
 			await em.flush();
 			return true;
 		} catch (e) {
