@@ -28,7 +28,7 @@ export class GenderService implements IEntityService<Gender, GenderInput> {
 		}
 	}
 
-	async create(input: { description: string }): Promise<Gender> {
+	async create(input: GenderInput): Promise<Gender> {
 		try {
 			const gender = new Gender();
 			gender.description = input.description;
@@ -41,7 +41,7 @@ export class GenderService implements IEntityService<Gender, GenderInput> {
 		}
 	}
 
-	async update(input: { id: number; description: string }): Promise<boolean> {
+	async update(input: GenderInput): Promise<boolean> {
 		try {
 			const toUpdate = await this.getById(input.id);
 			if (!toUpdate) {

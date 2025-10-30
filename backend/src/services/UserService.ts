@@ -1,31 +1,83 @@
-/*import { generateId, users } from '../data/UserData.js';
-import type { User } from '../models/User.js';
+import { NotFoundError } from '@mikro-orm/core';
+import { orm } from '../data/orm.js';
+import { Person } from '../models/Person.js';
+import { User } from '../models/User.js';
+import bcrypt from 'bcrypt';
+import type { UserInput } from '../schemas/UserSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';
 
-export class UserService implements IEntityService<User> {
+const em = orm.em;
+
+export class UserService implements IEntityService<User, UserInput> {
 	async getById(id: number): Promise<User | null> {
-		const user = users.find((u) => u.id === id);
-		if (!user) return null;
-		return user;
+		try {
+			return await em.findOneOrFail(User, { id }, { populate: ['person'] });
+		} catch (e) {
+			console.error(`error getById: ${e}`);
+			if (e instanceof NotFoundError) {
+				return null;
+			}
+			throw e;
+		}
 	}
 	async getAll(): Promise<User[]> {
-		return users;
+		try {
+			return await em.find(User, {}, { populate: ['person'] });
+		} catch (e) {
+			console.error(`error getAll: ${e}`);
+			return [];
+		}
 	}
-	async create(entity: User): Promise<void> {
-		entity.id = generateId();
-		users.push(entity);
+
+	async create(input: UserInput): Promise<User> {
+		try {
+			const hash = await bcrypt.hash(input.password, 10);
+			const user = new User();
+			user.username = input.username;
+			user.password = hash;
+			user.role = 'user';
+			user.person = em.getReference(Person, input.person.id);
+			em.create(User, user);
+			await em.flush();
+			return user;
+		} catch (e) {
+			console.error(`error create: ${e}`);
+			throw e;
+		}
 	}
-	async update(entity: User): Promise<boolean> {
-		const index = users.findIndex((u) => u.id === entity.id);
-		if (index === -1) return false;
-		users[index] = entity;
-		return true;
+
+	async update(input: UserInput): Promise<boolean> {
+		try {
+			const toUpdate = await this.getById(input.id);
+			if (!toUpdate) {
+				return false;
+			}
+			const hash = await bcrypt.hash(input.password, 10);
+			const user = new User();
+			user.username = input.username;
+			user.password = hash;
+			user.role = 'user';
+			user.person = em.getReference(Person, input.person.id);
+			em.assign(toUpdate, user);
+			await em.flush();
+			return true;
+		} catch (e) {
+			console.error(`error update: ${e}`);
+			throw e;
+		}
 	}
+
 	async delete(id: number): Promise<boolean> {
-		const index = users.findIndex((u) => u.id === id);
-		if (index === -1) return false;
-		users.splice(index, 1);
-		return true;
+		try {
+			const toDelete = await this.getById(id);
+			if (!toDelete) {
+				return false;
+			}
+			await em.removeAndFlush(toDelete);
+			return true;
+		} catch (e) {
+			console.error(`error deleting: ${e}`);
+			throw e;
+		}
 	}
 }
-*/

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const GenderSchema = z.object({
-	id: z.number().int().positive(),
+	id: z.number().int(),
 	description: z
 		.string()
 		.min(1)
