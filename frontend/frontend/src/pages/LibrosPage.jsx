@@ -124,7 +124,7 @@ function LibrosPage() {
       </form>
 
       {/* Tabla */}
-      <table className="table table-striped">
+      <table  className="table table-striped">
         <thead>
           <tr>
             <th>Título</th>
