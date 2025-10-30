@@ -3,55 +3,69 @@ import api from "../api/axiosConfig";
 
 function GenerosPage() {
   const [generos, setGeneros] = useState([]);
-  const [nombre, setNombre] = useState("");
+  const [descripcion, setDescripcion] = useState("");
   const [editando, setEditando] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // Cargar autores al montar el componente
+  const cargarGeneros = async () => {
+    setLoading(true);
+    try {
+      const res = await api.get("/genders");
+      setGeneros(res.data); // [{ id, description }]
+    } catch (e) {
+      console.error(e);
+      alert("No se pudieron cargar los géneros.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     cargarGeneros();
   }, []);
 
-  // Simulación temporal sin backend
-  const cargarGeneros = async () => {
-    // ⚠️ Cuando tengan el endpoint real, reemplazá esto por:
-    // const res = await api.get("/autores");
-    // setGeneros(res.data);
-    setGeneros([
-      { id: 1, nombre: "Ciencia ficción" },
-      { id: 2, nombre: "Terror" },
-    ]);
-  };
-
   const manejarSubmit = async (e) => {
     e.preventDefault();
-    if (nombre.trim() === "") return;
+    const description = descripcion.trim();
+    if (!description) return;
 
-    if (editando) {
-      // await api.put(`/generos/${editando}`, { nombre });
-      setGeneros(generos.map((a) => (a.id === editando ? { ...a, nombre } : a)));
-      setEditando(null);
-    } else {
-      // await api.post("/generos", { nombre });
-      const nuevoGenero = { id: Date.now(), nombre };
-      setGeneros([...generos, nuevoGenero]);
+    try {
+      if (editando) {
+        await api.put(`/genders/${editando}`, { id: editando, description });
+        setEditando(null);
+      } else {
+        // ⚠️ Backend exige id > 0 → calculamos el siguiente
+        const nextId = generos.length ? Math.max(...generos.map(g => Number(g.id))) + 1 : 1;
+        await api.post("/genders", { id: nextId, description });
+      }
+      setDescripcion("");
+      await cargarGeneros();
+    } catch (err) {
+      console.error(err);
+      const msg = err?.response?.data?.message || "No se pudo guardar el género.";
+      alert(msg);
     }
-
-    setNombre("");
   };
 
   const manejarEliminar = async (id) => {
-    // await api.delete(`/generos/${id}`);
-    setGeneros(generos.filter((a) => a.id !== id));
+    if (!confirm("¿Eliminar este género?")) return;
+    try {
+      await api.delete(`/genders/${id}`);
+      await cargarGeneros();
+    } catch (e) {
+      console.error(e);
+      alert("No se pudo eliminar el género.");
+    }
   };
 
   const manejarEditar = (genero) => {
-    setNombre(genero.nombre);
+    setDescripcion(genero.description ?? "");
     setEditando(genero.id);
   };
 
   return (
     <div className="col-md-8 mx-auto">
-      <h2 className="mb-3 text-center">Generos</h2>
+      <h2 className="mb-3 text-center">Géneros</h2>
 
       {/* Formulario */}
       <form onSubmit={manejarSubmit} className="mb-4">
@@ -59,41 +73,46 @@ function GenerosPage() {
           <input
             type="text"
             className="form-control"
-            placeholder="Nombre de la genero"
-            value={nombre}
-            onChange={(e) => setNombre(e.target.value)}
+            placeholder="Descripción del género"
+            value={descripcion}
+            onChange={(e) => setDescripcion(e.target.value)}
           />
-          <button className="btn btn-primary" type="submit">
+          <button className="btn btn-primary" type="submit" disabled={!descripcion.trim()}>
             {editando ? "Actualizar" : "Agregar"}
           </button>
         </div>
       </form>
 
       {/* Listado */}
-      <ul className="list-group">
-        {generos.map((genero) => (
-          <li
-            key={genero.id}
-            className="list-group-item d-flex justify-content-between align-items-center"
-          >
-            <span>{genero.nombre}</span>
-            <div>
-              <button
-                className="btn btn-sm btn-warning me-2"
-                onClick={() => manejarEditar(genero)}
-              >
-                Editar
-              </button>
-              <button
-                className="btn btn-sm btn-danger"
-                onClick={() => manejarEliminar(genero.id)}
-              >
-                Eliminar
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {loading ? (
+        <p className="text-center">Cargando...</p>
+      ) : (
+        <ul className="list-group">
+          {generos.map((genero) => (
+            <li
+              key={genero.id}
+              className="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <span>{genero.description}</span>
+              <div>
+                <button
+                  className="btn btn-sm btn-warning me-2"
+                  onClick={() => manejarEditar(genero)}
+                >
+                  Editar
+                </button>
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={() => manejarEliminar(genero.id)}
+                >
+                  Eliminar
+                </button>
+              </div>
+            </li>
+          ))}
+          {!generos.length && <li className="list-group-item text-center">Sin géneros</li>}
+        </ul>
+      )}
     </div>
   );
 }

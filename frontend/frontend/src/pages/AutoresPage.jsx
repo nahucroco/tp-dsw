@@ -15,19 +15,29 @@ function AutoresPage() {
 
   const manejarSubmit = async (e) => {
     e.preventDefault();
-    if (!nombre.trim()) return;
+    const name = nombre.trim();
+    if (!name) return;
 
-    if (editando) {
-      await api.put(`/authors/${editando}`, { id: editando, name: nombre });
-      setEditando(null);
-    } else {
-      // tu back exige id > 0
-      const nextId = autores.length ? Math.max(...autores.map(a => a.id)) + 1 : 1;
-      await api.post("/authors", { id: nextId, name: nombre });
+    try {
+      if (editando) {
+        // UPDATE: el back pide id en body y lo compara con :id
+        await api.put(`/authors/${editando}`, { id: editando, name });
+        setEditando(null);
+      } else {
+        // CREATE: el back hoy exige id > 0 ⇒ calculamos el siguiente
+        const nextId = autores.length ? Math.max(...autores.map(a => a.id)) + 1 : 1;
+        await api.post("/authors", { id: nextId, name });
+      }
+      setNombre("");
+      await cargarAutores();
+    } catch (err) {
+      console.error(err);
+      const msg = err?.response?.data?.message || "No se pudo guardar el autor.";
+      alert(msg);
     }
-    setNombre("");
-    await cargarAutores();
   };
+
+
 
   const manejarEliminar = async (id) => {
     await api.delete(`/authors/${id}`);
