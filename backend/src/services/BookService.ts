@@ -3,6 +3,7 @@ import { orm } from '../data/orm.js';
 import { Author } from '../models/Author.js';
 import { Book } from '../models/Book.js';
 import { Gender } from '../models/Gender.js';
+import { Publisher } from '../models/Publisher.js';
 import type { BookInput } from '../schemas/BookSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';
 
@@ -14,7 +15,7 @@ export class BookService implements IEntityService<Book, BookInput> {
 			return await em.findOneOrFail(
 				Book,
 				{ id: id },
-				{ populate: ['gender', 'author'] },
+				{ populate: ['gender', 'author', 'publisher'] },
 			);
 		} catch (e) {
 			console.error(`error getById: ${e}`);
@@ -27,7 +28,11 @@ export class BookService implements IEntityService<Book, BookInput> {
 
 	async getAll(): Promise<Book[]> {
 		try {
-			return await em.find(Book, {}, { populate: ['gender', 'author'] });
+			return await em.find(
+				Book,
+				{},
+				{ populate: ['gender', 'author', 'publisher'] },
+			);
 		} catch (e) {
 			console.error(`error getAll: ${e}`);
 			return [];
@@ -39,6 +44,7 @@ export class BookService implements IEntityService<Book, BookInput> {
 			book.title = input.title;
 			book.author = em.getReference(Author, input.author.id);
 			book.gender = em.getReference(Gender, input.gender.id);
+			book.publisher = em.getReference(Publisher, input.publisher.id);
 			em.create(Book, book);
 			await em.flush();
 			return book;
@@ -58,6 +64,7 @@ export class BookService implements IEntityService<Book, BookInput> {
 			book.title = input.title;
 			book.author = em.getReference(Author, input.author.id);
 			book.gender = em.getReference(Gender, input.gender.id);
+			book.publisher = em.getReference(Publisher, input.publisher.id);
 
 			em.assign(toUpdate, book);
 			await em.flush();

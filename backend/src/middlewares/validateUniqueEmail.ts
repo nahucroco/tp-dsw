@@ -2,6 +2,7 @@ import type { NextFunction, Request, Response } from 'express';
 import { orm } from '../data/orm.js';
 import { Person } from '../models/Person.js';
 
+const em = orm.em;
 export async function validateUniqueEmail(
 	req: Request,
 	res: Response,
@@ -9,7 +10,7 @@ export async function validateUniqueEmail(
 ) {
 	const { emailAddress } = req.body;
 	try {
-		const existingEmail = await orm.em.findOne(Person, {
+		const existingEmail = await em.findOne(Person, {
 			emailAddress,
 		});
 

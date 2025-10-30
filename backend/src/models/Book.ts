@@ -12,6 +12,7 @@ import { Author } from './Author.js';
 import { BookCopy } from './BookCopy.js';
 import { BusinessEntity } from './BusinessEntity.js';
 import { Gender } from './Gender.js';
+import { Publisher } from './Publisher.js';
 
 @Entity()
 export class Book extends BusinessEntity {
@@ -21,6 +22,8 @@ export class Book extends BusinessEntity {
 	gender!: Rel<Gender>;
 	@ManyToOne(() => Author, { nullable: false })
 	author!: Rel<Author>;
+	@ManyToOne(() => Publisher, { nullable: false })
+	publisher!: Rel<Publisher>;
 	@OneToMany(
 		() => BookCopy,
 		(copy) => copy.book,

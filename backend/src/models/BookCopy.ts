@@ -2,7 +2,7 @@ import { Entity, Enum, ManyToOne, Property, type Rel } from '@mikro-orm/mysql';
 import { BookCondition } from '../enums/BookCondition.js';
 import { Book } from './Book.js';
 import { BusinessEntity } from './BusinessEntity.js';
-import {Loan} from "./Loan.js";
+import { Loan } from './Loan.js';
 
 @Entity()
 export class BookCopy extends BusinessEntity {
@@ -14,6 +14,6 @@ export class BookCopy extends BusinessEntity {
 
 	@ManyToOne(() => Book, { nullable: false })
 	book!: Rel<Book>;
-    @ManyToOne(() => Loan, { nullable: true })
-    loan?: Rel<Loan>;
+	@ManyToOne(() => Loan, { nullable: true })
+	loan?: Rel<Loan>;
 }
