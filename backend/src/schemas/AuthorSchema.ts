@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 const AuthorSchema = z.object({
-	id: z.number().int().positive(),
+	id: z.number().int(),
 	name: z
 		.string()
 		.min(1)

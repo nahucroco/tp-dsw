@@ -10,12 +10,12 @@ Content-Type: application/json
 
 {
   "id": 1,
-  "title": "Eso",
+  "title": "harry poter",
   "author": {
-    "id": 1
+    "id": 2
   },
   "gender": {
-    "id": 1
+    "id": 3
   }
 }
 ###
@@ -42,15 +42,15 @@ DELETE http://localhost:3000/api/books/1
 GET http://localhost:3000/api/authors
 ###
 ### Get author by id
-GET http://localhost:3000/api/authors/1
+GET http://localhost:3000/api/authors/2
 ###
 ### Create author
 POST http://localhost:3000/api/authors
 Content-Type: application/json
 
 {
-  "id": 1,
-  "name": "Stephen Kong"
+  "id": 0,
+  "name": "jk rowling"
 }
 ###
 ### Update author
@@ -76,7 +76,7 @@ Content-Type: application/json
 
 {
   "id": 1,
-  "description": "Comedia"
+  "description": "fantasia"
 }
 ###
 ### Update gender
@@ -89,3 +89,81 @@ Content-Type: application/json
 ###
 ### Delete gender
 DELETE http://localhost:3000/api/genders/1
+###
+POST http://localhost:3000/api/book_copies
+Content-Type: application/json
+
+{
+  "id": 0,
+  "is_available": true,
+  "condition": "GOOD",
+  "book": {
+    "id": 2
+  }
+}
+
+### Get All Persons
+GET http://localhost:3000/api/persons
+### Get person by id
+GET http://localhost:3000/api/persons/1
+
+### Create Person
+POST http://localhost:3000/api/persons
+Content-Type: application/json
+
+{
+  "id": 1,
+  "name":"fideo",
+  "lastName": "di maria",
+  "address": "direccion",
+  "phone": "123455",
+  "emailAddress": "dimaria@gmail.com"
+}
+### Update Person
+PUT http://localhost:3000/api/persons/1
+Content-Type: application/json
+
+{
+"id": 1,
+"name":"fideo",
+"lastName": "di maria",
+"address": "direccion",
+"phone": "123455",
+"emailAddress": "dimaria@gmail.com"
+}
+###
+DELETE http://localhost:3000/api/persons/4
+### Get user by id
+GET http://localhost:3000/api/users/1
+### Create User
+POST http://localhost:3000/api/users
+Content-Type: application/json
+
+{
+  "id": 0,
+  "username": "c",
+  "password": "Messi123",
+  "person": {"id":  5}
+}
+###
+DELETE http://localhost:3000/api/users/6
+
+###
+POST http://localhost:3000/api/loans
+Content-Type: application/json
+
+{
+  "id": 0,
+  "start_date": "2025-10-30T00:00:00.000Z",
+  "end_date": "2025-11-15T00:00:00.000Z",
+  "person": {
+    "id": 6
+  },
+  "bookCopies": [
+    { "id": 2 },
+    { "id": 3 },
+    { "id": 4 },
+    {"id":  5}
+
+  ]
+}
