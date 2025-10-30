@@ -160,10 +160,9 @@ Content-Type: application/json
     "id": 6
   },
   "bookCopies": [
-    { "id": 2 },
-    { "id": 3 },
-    { "id": 4 },
-    {"id":  5}
 
+    { "id": 10 }
   ]
 }
+###
+DELETE http://localhost:3000/api/loans/1

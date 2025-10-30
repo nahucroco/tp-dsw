@@ -13,6 +13,9 @@ const BookSchema = z.object({
 	gender: z.object({
 		id: z.number().int().positive(),
 	}),
+	publisher: z.object({
+		id: z.number().int().positive(),
+	}),
 });
 export type BookInput = z.infer<typeof BookSchema>;
 export { BookSchema };
