@@ -8,6 +8,7 @@ import GenerosPage from "./pages/GenerosPage";
 import LibrosPage from "./pages/LibrosPage";
 import PrestamosPage from "./pages/PrestamosPage";
 import UsuariosPage from "./pages/UsuariosPage";
+import PersonasPage from "./pages/PersonasPage.jsx";
 import "./styles.css";
 
 function App() {
@@ -23,6 +24,7 @@ function App() {
           <Route path="/libros" element={<LibrosPage />} />
           <Route path="/prestamos" element={<PrestamosPage />} />
           <Route path="/usuarios" element={<UsuariosPage />} />
+          <Route path="/personas" element={<PersonasPage />} />
         </Routes>
       </div>
       <Footer />
