@@ -21,15 +21,20 @@ export class PersonService implements IEntityService<Person, PersonInput> {
 	}
 
 	async create(input: PersonInput): Promise<Person> {
-		const person = new Person();
-		person.name = input.name;
-		person.lastName = input.lastName;
-		person.address = input.address;
-		person.phone = input.phone;
-		person.emailAddress = input.emailAddress; // ya normalizado por el middleware
-		em.create(Person, person);
-		await em.flush();
-		return person;
+		try {
+			const person = new Person();
+			person.name = input.name;
+			person.lastName = input.lastName;
+			person.address = input.address;
+			person.phone = input.phone;
+			person.emailAddress = input.emailAddress; // ya normalizado por el middleware
+			em.create(Person, person);
+			await em.flush();
+			return person;
+		} catch (e) {
+			console.error(`error creating person: ${e}`);
+			throw e;
+		}
 	}
 
 	async update(input: PersonInput): Promise<boolean> {
@@ -51,7 +56,6 @@ export class PersonService implements IEntityService<Person, PersonInput> {
 			throw e;
 		}
 	}
-
 
 	async delete(id: number): Promise<boolean> {
 		const toDelete = await this.getById(id);

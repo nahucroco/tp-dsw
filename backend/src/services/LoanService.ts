@@ -64,10 +64,10 @@ export class LoanService implements IEntityService<Loan, LoanInput> {
 			toUpdate.startDate = input.start_date;
 			toUpdate.endDate = input.end_date;
 			toUpdate.person = em.getReference(Person, input.person.id);
-
-			toUpdate.bookCopies.removeAll();
+			await this.enableCopiesToUpdate(toUpdate);
 			for (const copyRef of input.bookCopies) {
 				const copy = await em.findOneOrFail(BookCopy, { id: copyRef.id });
+				copy.is_available = false;
 				toUpdate.bookCopies.add(copy);
 			}
 
@@ -93,5 +93,11 @@ export class LoanService implements IEntityService<Loan, LoanInput> {
 			console.error(`error deleting: ${e}`);
 			throw e;
 		}
+	}
+	async enableCopiesToUpdate(toUpdate: Loan): Promise<void> {
+		for (const copyRef of toUpdate.bookCopies) {
+			copyRef.is_available = true;
+		}
+		await em.flush();
 	}
 }
