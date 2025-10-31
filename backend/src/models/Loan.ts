@@ -27,8 +27,7 @@ export class Loan extends BusinessEntity {
 		() => BookCopy,
 		(copy) => copy.loan,
 		{
-			cascade: [Cascade.PERSIST, Cascade.REMOVE],
-			orphanRemoval: true,
+			cascade: [Cascade.PERSIST],
 			strategy: LoadStrategy.SELECT_IN,
 		},
 	)
