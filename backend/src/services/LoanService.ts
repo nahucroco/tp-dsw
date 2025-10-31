@@ -82,7 +82,11 @@ export class LoanService implements IEntityService<Loan, LoanInput> {
 	async delete(id: number): Promise<boolean> {
 		try {
 			const toDelete = await this.getById(id);
+
 			if (!toDelete) return false;
+			for (const copyRef of toDelete.bookCopies) {
+				copyRef.is_available = true;
+			}
 			await em.removeAndFlush(toDelete);
 			return true;
 		} catch (e) {
