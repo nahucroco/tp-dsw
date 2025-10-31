@@ -1,12 +1,19 @@
 import type { Request, Response } from 'express';
 import type { SanctionInput } from '../schemas/SanctionSchema.js';
 import { SanctionService } from '../services/SanctionService.js';
+import { wrap } from '@mikro-orm/core';
 
 const sanctionService = new SanctionService();
 
 export const getSanction = async (_req: Request, res: Response) => {
-	const sanctions = await sanctionService.getAll();
-	return res.json(sanctions);
+  try {
+    const sanctions = await sanctionService.getAll();
+    const plain = sanctions.map(s => wrap(s).toJSON()); // ✅
+    return res.json(plain);
+  } catch (e) {
+    console.error('getSanction error:', e);
+    return res.status(500).json({ message: 'internal error' });
+  }
 };
 
 export const getSanctionById = async (req: Request, res: Response) => {

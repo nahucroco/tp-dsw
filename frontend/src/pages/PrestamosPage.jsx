@@ -1,298 +1,378 @@
-import { useEffect, useMemo, useState } from "react";
-import api from "../api/axiosConfig";
-import { LoanService } from "../services/LoanService.js";
-import { PersonService } from "../services/PersonService.js";
-import { BookCopyService } from "../services/BookCopyService.js";
+import { useEffect, useMemo, useState, useCallback } from "react";
+import { LoanService } from "../services/LoanService";
+import { PersonService } from "../services/PersonService";
+import { BookCopyService } from "../services/BookCopyService";
 
-const empty = { start_date: "", end_date: "", personId: "", bookIds: [] };
+const arr = (x) => (Array.isArray(x) ? x : []);
+const getCopyIds = (loan) =>
+  arr(loan?.bookCopies ?? loan?.book_copies ?? loan?.copies)
+    .map(c => Number(c.id ?? c.copyId))
+    .filter(Number.isFinite);
 
-const ymd = (d) => {
+function formatDateISO(d) {
   if (!d) return "";
-  const dt = new Date(d);
-  const m = String(dt.getMonth() + 1).padStart(2, "0");
-  const day = String(dt.getDate()).padStart(2, "0");
-  return `${dt.getFullYear()}-${m}-${day}`;
-};
+  const date = new Date(d);
+  // yyyy-mm-dd para inputs type="date"
+  return date.toISOString().slice(0, 10);
+}
 
-export default function PrestamosPage() {
-  const [loans, setLoans] = useState([]);
-  const [persons, setPersons] = useState([]);
-  const [books, setBooks] = useState([]);
+function personDisplay(p) {
+  if (!p) return "";
+  if (p.name) return p.name;
+  if (p.full_name) return p.full_name;
+
+  const first = p.firstName ?? p.first_name ?? "";
+  const last = p.lastName ?? p.last_name ?? "";
+  const full = `${first} ${last}`.trim();
+  if (full) return full;
+
+  // últimos recursos útiles para identificar
+  if (p.emailAddress ?? p.email) return p.emailAddress ?? p.email;
+  if (p.dni) return `DNI ${p.dni}`;
+  return `#${p.id}`;
+}
+
+function LoanFormModal({ show, onClose, onSaved, editLoan }) {
+  const [people, setPeople] = useState([]);
   const [copies, setCopies] = useState([]);
-  const [form, setForm] = useState(empty);
-  const [editId, setEditId] = useState(null);
-  const [loading, setLoading] = useState(false);
 
-  const load = async () => {
-    setLoading(true);
-    try {
-      const [L, P, B, C] = await Promise.all([
-        LoanService.list(),
-        PersonService.list(),
-        api.get("/books").then(r => r.data),
-        BookCopyService.list(),
-      ]);
-      setLoans(L);
-      setPersons(P);
-      setBooks(B);
-      setCopies(C);
-    } finally { setLoading(false); }
-  };
+  const [personId, setPersonId] = useState("");
+  const [start, setStart] = useState("");
+  const [end, setEnd] = useState("");
+  const [selectedCopyIds, setSelectedCopyIds] = useState([]);
 
-  useEffect(() => { load(); }, []);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
+  const [unavailableIds, setUnavailableIds] = useState([]);
 
-  // Copias disponibles por libro (sin loan y, si existe el campo, is_available true)
-  const availableByBook = useMemo(() => {
-    const m = new Map();
-    for (const c of copies) {
-      const bId = c.book?.id;
-      if (!bId) continue;
-      const isFree = !c.loan && (c.is_available ?? true);
-      if (!isFree) continue;
-      if (!m.has(bId)) m.set(bId, []);
-      m.get(bId).push(c);
-    }
-    return m; // Map<number, BookCopy[]>
-  }, [copies]);
+  const loanCopies = useMemo(() => {
+    const arr =
+      (editLoan?.bookCopies ??
+        editLoan?.book_copies ??
+        editLoan?.copies ??
+        []);
+    return Array.isArray(arr) ? arr : [];
+  }, [editLoan]);
 
-  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  // Toggle de libros (máx. 3, sin repetir)
-  const toggleBook = (bookId) => {
-    setForm((f) => {
-      const has = f.bookIds.includes(bookId);
-      if (has) return { ...f, bookIds: f.bookIds.filter(id => id !== bookId) };
-      if (f.bookIds.length >= 3) return f;
-      return { ...f, bookIds: [...f.bookIds, bookId] };
-    });
-  };
-
-  const currentLoan = useMemo(
-    () => loans.find(l => l.id === editId) || null,
-    [loans, editId]
+  const belongsToThisLoan = useCallback(
+    (copyId) => selectedCopyIds.includes(Number(copyId)),
+    [selectedCopyIds]
   );
 
-  // Resolver copias libres para los libros seleccionados
-  const resolveCopiesForSelectedBooks = () => {
-    // mapa: bookId -> copyId actualmente asignada en el préstamo
-    const currentByBook = new Map();
-    if (currentLoan && Array.isArray(currentLoan.bookCopies)) {
-      for (const c of currentLoan.bookCopies) {
-        const bId = c.book?.id ?? copies.find(x => x.id === c.id)?.book?.id ?? null;
-        if (bId && !currentByBook.has(bId)) currentByBook.set(bId, c.id);
-      }
-    }
+  // Cargar combos
+  useEffect(() => {
+    if (!show) return;
+    (async () => {
+      const [ps, cs] = await Promise.all([
+        PersonService.list(),
+        BookCopyService.list(),
+      ]);
+      setPeople(ps);
+      setCopies(cs);
 
-    const selected = new Set(form.bookIds);
-
-    // libros nuevos = seleccionados que antes no estaban
-    const toAdd = [...selected].filter(bId => !currentByBook.has(bId));
-
-    // ⚠️ si quitaste libros, por ahora no los mandamos a borrar aquí
-    // (si necesitás remover, luego vemos si el back tiene endpoint para “remover copia”)
-
-    // para cada libro nuevo, elegir una copia libre
-    const newCopies = [];
-    for (const bId of toAdd) {
-      const libres = availableByBook.get(bId) || [];
-      if (libres.length === 0) {
-        const book = books.find(b => b.id === bId);
-        throw new Error(`No hay copias disponibles de "${book?.title ?? "Libro " + bId}".`);
-      }
-      newCopies.push({ id: libres[0].id });
-    }
-
-    return newCopies; // 👈 solo las NUEVAS copias que hay que agregar
-  };
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    const { start_date, end_date, personId, bookIds } = form;
-    if (!start_date || !end_date || !personId || bookIds.length === 0) {
-      return alert("Completá fechas, persona y al menos 1 libro (máx. 3).");
-    }
-
-    try {
-      const bookCopies = resolveCopiesForSelectedBooks(); // 👈 solo nuevas
-
-      const dStart = new Date(start_date);
-      const dEnd = new Date(end_date);
-
-      if (editId) {
-        // Envío solo las NUEVAS copias; las actuales el back las mantiene
-        const shapes = [
-          { id: editId, startDate: dStart, endDate: dEnd, person: { id: Number(personId) }, bookCopies },
-          { id: editId, start_date: dStart, end_date: dEnd, person: { id: Number(personId) }, bookCopies },
-          { id: editId, startDate: dStart, endDate: dEnd, personId: Number(personId), bookCopies },
-        ];
-
-        let lastErr;
-        for (const payload of shapes) {
-          try { await LoanService.update(editId, payload); lastErr = null; break; }
-          catch (e) { console.warn("Intento fallido con payload:", payload, "→", e?.response?.data || e); lastErr = e; }
-        }
-        if (lastErr) throw lastErr;
-
-        setEditId(null);
+      // dentro del useEffect que carga combos
+      if (editLoan?.id) {
+        const fresh = await LoanService.get(Number(editLoan.id)); // 👈 trae copias “populadas”
+        setPersonId(fresh.person?.id != null ? String(fresh.person.id) : "");
+        setStart(formatDateISO(fresh.startDate ?? fresh.start_date));
+        setEnd(formatDateISO(fresh.endDate ?? fresh.end_date));
+        setSelectedCopyIds(getCopyIds(fresh));                    // 👈 pre-selecciona
       } else {
-        // create igual que antes
-        const nextId = loans.length ? Math.max(...loans.map(l => l.id)) + 1 : 1;
-        await LoanService.create({
-          id: nextId,
-          start_date: dStart,
-          end_date: dEnd,
-          person: { id: Number(personId) },
-          bookCopies: form.bookIds.map(bId => {
-            const libres = availableByBook.get(bId) || [];
-            if (!libres.length) throw new Error("No hay copias disponibles de algún libro.");
-            return { id: libres[0].id };
-          }),
-        });
+        setPersonId("");
+        setStart("");
+        setEnd("");
+        setSelectedCopyIds([]);
       }
 
-      setForm(empty);
-      await load();
-    } catch (err) {
-      const data = err?.response?.data;
-      const msg =
-        (err instanceof Error && err.message) ||
-        (typeof data === "string" && data) ||
-        data?.message ||
-        (Array.isArray(data?.errors) && data.errors.map(i => i.message || i).join("\n")) ||
-        (Array.isArray(data?.issues) && data.issues.map(i => i.message).join("\n")) ||
-        data?.error || "No se pudo guardar el préstamo.";
-      alert(msg);
-    }
-  };
+      setError(null);
+      setUnavailableIds([]);
+    })();
+  }, [show, editLoan?.id]);
 
-  const onEdit = (loan) => {
-    // intentamos inferir los libros a partir de las copias pobladas
-    const ids =
-      (loan.bookCopies || [])
-        .map(c => c.book?.id || copies.find(x => x.id === c.id)?.book?.id)
-        .filter(Boolean);
+  const isValid = useMemo(() => {
+    if (!personId || !start || !end) return false;
+    if (new Date(start) > new Date(end)) return false;
+    if (selectedCopyIds.length < 1 || selectedCopyIds.length > 3) return false;
+    return true;
+  }, [personId, start, end, selectedCopyIds]);
 
-    setEditId(loan.id);
-    setForm({
-      start_date: ymd(loan.startDate || loan.start_date),
-      end_date: ymd(loan.endDate || loan.end_date),
-      personId: loan.person?.id ?? "",
-      bookIds: Array.from(new Set(ids)).slice(0, 3),
+  const handleToggleCopy = (id, isAvailable) => {
+    // evitar seleccionar copias no disponibles visualmente
+    if (!isAvailable) return;
+    const n = Number(id);
+    setSelectedCopyIds(prev => {
+      if (prev.includes(n)) return prev.filter(x => x !== n);
+      if (prev.length >= 3) return prev; // máximo 3
+      return [...prev, n];
     });
   };
 
-  const onDelete = async (id) => {
-    if (!confirm("¿Eliminar préstamo?")) return;
-    await LoanService.remove(id);
-    await load();
+  const toBackendIso = (yyyy_mm_dd) => `${yyyy_mm_dd}T00:00:00.000Z`;
+  const originalCopyIds = (editLoan?.bookCopies ?? []).map(c => c.id).sort((a, b) => a - b);
+
+  const sameIds = (a, b) => {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+    return true;
+  };
+
+  const submit = async (e) => {
+    e.preventDefault();
+    if (!isValid) return;
+
+    setSaving(true);
+    setError(null);
+    setUnavailableIds([]);
+
+    const selected = selectedCopyIds.map(Number);
+
+    const payload = {
+      id: editLoan ? Number(editLoan.id) : 0,                 // tu back lo pide así
+      start_date: `${start}T00:00:00.000Z`,
+      end_date: `${end}T00:00:00.000Z`,
+      person: { id: Number(personId) },
+      bookCopies: selected.map(id => ({ id })),               // 👈 SIEMPRE enviar
+    };
+
+    try {
+      if (editLoan) {
+        await LoanService.update(editLoan.id, payload);
+      } else {
+        await LoanService.create(payload);
+      }
+      onSaved();
+      onClose();
+    } catch (err) {
+      const resp = err?.response;
+      if (resp?.status === 400 && resp?.data?.unavailableIds) {
+        setUnavailableIds(resp.data.unavailableIds);
+        setError("Algunas copias no están disponibles.");
+      } else {
+        setError(resp?.data?.message || resp?.data?.error || "Error inesperado.");
+        console.warn("Error creando/actualizando préstamo:", resp?.data || err);
+      }
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
-    <div className="col-md-11 mx-auto">
-      <h2 className="mb-3 text-center">Préstamos</h2>
+    <div className={`modal ${show ? "d-block" : ""}`} tabIndex="-1" role="dialog" style={{ background: "rgba(0,0,0,.5)" }}>
+      <div className="modal-dialog modal-lg" role="document">
+        <div className="modal-content">
+          <form onSubmit={submit}>
+            <div className="modal-header">
+              <h5 className="modal-title">{editLoan ? "Editar préstamo" : "Nuevo préstamo"}</h5>
+              <button type="button" className="btn-close" onClick={onClose} />
+            </div>
 
-      <form onSubmit={onSubmit} className="mb-4">
-        <div className="row g-2">
-          <div className="col-md-3">
-            <label className="form-label">Inicio</label>
-            <input type="date" className="form-control" name="start_date"
-              value={form.start_date} onChange={onChange} />
-          </div>
-          <div className="col-md-3">
-            <label className="form-label">Fin</label>
-            <input type="date" className="form-control" name="end_date"
-              value={form.end_date} onChange={onChange} />
-          </div>
-          <div className="col-md-3">
-            <label className="form-label">Persona</label>
-            <select className="form-select" name="personId"
-              value={form.personId} onChange={onChange}>
-              <option value="">Seleccionar…</option>
-              {persons.map(p => (
-                <option key={p.id} value={p.id}>
-                  {p.name} {p.lastName} — {p.emailAddress}
-                </option>
-              ))}
-            </select>
-          </div>
+            <div className="modal-body">
+              {error && (
+                <div className="alert alert-danger">
+                  {error}
+                  {unavailableIds.length > 0 && (
+                    <div className="mt-1">
+                      Copias no disponibles: <strong>{unavailableIds.join(", ")}</strong>
+                    </div>
+                  )}
+                </div>
+              )}
 
-          <div className="col-md-3">
-            <label className="form-label">
-              Libros (hasta 3)
-            </label>
-            <div className="border rounded p-2" style={{ maxHeight: 180, overflowY: "auto" }}>
-              {books.map(b => {
-                const selected = form.bookIds.includes(b.id);
-                const avail = (availableByBook.get(b.id) || []).length;
-                const disabled = !selected && (form.bookIds.length >= 3 || avail === 0);
+              <div className="row g-3">
+                <div className="col-md-6">
+                  <label className="form-label">Persona</label>
+                  <select
+                    className="form-select"
+                    value={personId}
+                    onChange={(e) => setPersonId(e.target.value)}
+                  >
+                    <option value="">Seleccionar…</option>
+                    {people.map(p => (
+                      <option key={p.id} value={String(p.id)}>
+                        {personDisplay(p)}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="col-md-3">
+                  <label className="form-label">Inicio</label>
+                  <input type="date" className="form-control" value={start} onChange={(e) => setStart(e.target.value)} />
+                </div>
+
+                <div className="col-md-3">
+                  <label className="form-label">Fin</label>
+                  <input type="date" className="form-control" value={end} onChange={(e) => setEnd(e.target.value)} />
+                </div>
+              </div>
+
+              <hr className="my-4" />
+
+              <div>
+                <div className="d-flex justify-content-between align-items-center mb-2">
+                  <label className="form-label m-0">Copias de libros (máx. 3)</label>
+                  <small className="text-muted">{selectedCopyIds.length} seleccionadas</small>
+                </div>
+
+                <div className="row row-cols-1 row-cols-md-2 g-2" style={{ maxHeight: 280, overflowY: "auto" }}>
+                  {copies.map(c => {
+                    const cid = Number(c.id);
+                    const isChecked = selectedCopyIds.includes(cid);
+                    const isAvailable = !!c.is_available;
+                    const isMine = belongsToThisLoan(c.id);
+                    const disabled = !isAvailable && !isMine;
+
+                    return (
+                      <div className="col" key={c.id}>
+                        <div className={`form-check p-3 border rounded ${!isAvailable && !isMine ? "bg-light" : ""}`}>
+                          <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id={`copy-${cid}`}
+                            checked={isChecked}
+                            disabled={disabled}
+                            onChange={() => handleToggleCopy(cid, isAvailable || isMine)}
+                          />
+                          <label className="form-check-label" htmlFor={`copy-${c.id}`}>
+                            <div className="fw-semibold">Copia #{c.id}</div>
+                            <div className="small text-muted">
+                              Libro: {c.book?.title ?? "(sin título)"} — Código: {c.code ?? c.inventory_code ?? "-"}
+                            </div>
+                            {!isAvailable && !isMine && <span className="badge bg-secondary mt-1">No disponible</span>}
+                            {!isAvailable && isMine && <span className="badge bg-info text-dark mt-1">Reservada por este préstamo</span>}
+                          </label>
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                </div>
+              </div>
+            </div>
+
+            <div className="modal-footer">
+              <button type="button" className="btn btn-outline-secondary" onClick={onClose}>Cancelar</button>
+              <button type="submit" className="btn btn-primary" disabled={!isValid || saving}>
+                {saving ? "Guardando…" : (editLoan ? "Guardar cambios" : "Crear préstamo")}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function PrestamosPage() {
+  const [loans, setLoans] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState(null);
+  const [error, setError] = useState(null);
+
+  const load = async () => {
+    try {
+      setLoading(true);
+      const data = await LoanService.list();
+      setLoans(data);
+    } catch (e) {
+      setError("No se pudieron cargar los préstamos.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+  }, []);
+
+  const onCreate = () => {
+    setEditing(null);
+    setShowForm(true);
+  };
+
+  const onEdit = (loan) => {
+    setEditing(loan);
+    setShowForm(true);
+  };
+
+  const onDelete = async (id) => {
+    if (!window.confirm("¿Eliminar este préstamo?")) return;
+    try {
+      await LoanService.remove(id);
+      await load();
+    } catch {
+      alert("No se pudo eliminar. Intenta nuevamente.");
+    }
+  };
+
+  return (
+    <div className="container py-4">
+      <div className="d-flex justify-content-between align-items-center mb-3">
+        <h2 className="m-0">Préstamos</h2>
+        <button className="btn btn-primary" onClick={onCreate}>Nuevo préstamo</button>
+      </div>
+
+      {error && <div className="alert alert-danger">{error}</div>}
+
+      {loading ? (
+        <div className="text-muted">Cargando…</div>
+      ) : loans.length === 0 ? (
+        <div className="alert alert-info">No hay préstamos.</div>
+      ) : (
+        <div className="table-responsive">
+          <table className="table align-middle">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Persona</th>
+                <th>Inicio</th>
+                <th>Fin</th>
+                <th>Copias</th>
+                <th style={{ width: 140 }}></th>
+              </tr>
+            </thead>
+            <tbody>
+              {loans.map(l => {
+                const start = formatDateISO(l.startDate ?? l.start_date);
+                const end = formatDateISO(l.endDate ?? l.end_date);
+                const personLabel = personDisplay(l.person);
                 return (
-                  <div className="form-check" key={b.id}>
-                    <input
-                      className="form-check-input"
-                      type="checkbox"
-                      id={`book-${b.id}`}
-                      checked={selected}
-                      disabled={disabled}
-                      onChange={() => toggleBook(b.id)}
-                    />
-                    <label className="form-check-label" htmlFor={`book-${b.id}`}>
-                      {b.title} <small className="text-muted">({avail} disp.)</small>
-                    </label>
-                  </div>
+                  <tr key={l.id}>
+                    <td>{l.id}</td>
+                    <td>{personLabel}</td>
+                    <td>{start}</td>
+                    <td>{end}</td>
+                    <td>
+                      {(l.bookCopies ?? []).length ? (
+                        <div className="d-flex flex-wrap gap-1">
+                          {l.bookCopies.map(c => (
+                            <span key={c.id} className="badge text-bg-light border">{c.id}</span>
+                          ))}
+                        </div>
+                      ) : <span className="text-muted">—</span>}
+                    </td>
+                    <td className="text-end">
+                      <div className="btn-group">
+                        <button className="btn btn-sm btn-outline-secondary" onClick={() => onEdit(l)}>Editar</button>
+                        <button className="btn btn-sm btn-outline-danger" onClick={() => onDelete(l.id)}>Eliminar</button>
+                      </div>
+                    </td>
+                  </tr>
                 );
               })}
-            </div>
-          </div>
-
-          <div className="col-md-12 mt-2">
-            <button className="btn btn-primary" type="submit">
-              {editId ? "Actualizar" : "Agregar"}
-            </button>
-            {editId && (
-              <button type="button" className="btn btn-secondary ms-2"
-                onClick={() => { setEditId(null); setForm(empty); }}>
-                Cancelar
-              </button>
-            )}
-          </div>
+            </tbody>
+          </table>
         </div>
-      </form>
+      )}
 
-      {loading ? <p>Cargando…</p> : (
-        <table className="table table-striped">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Inicio</th>
-              <th>Fin</th>
-              <th>Persona</th>
-              <th>Libros</th>
-              <th className="text-end">Acciones</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loans.map(loan => (
-              <tr key={loan.id}>
-                <td>{loan.id}</td>
-                <td>{ymd(loan.startDate || loan.start_date)}</td>
-                <td>{ymd(loan.endDate || loan.end_date)}</td>
-                <td>{loan.person ? `${loan.person.name} ${loan.person.lastName}` : "-"}</td>
-                <td>
-                  {(loan.bookCopies || []).map(c => {
-                    const title = c.book?.title
-                      || books.find(b => b.id === (copies.find(x => x.id === c.id)?.book?.id))?.title
-                      || `Copia #${c.id}`;
-                    return <span key={c.id} className="badge bg-secondary me-1">{title}</span>;
-                  })}
-                </td>
-                <td className="text-end">
-                  <button className="btn btn-warning btn-sm me-2" onClick={() => onEdit(loan)}>Editar</button>
-                  <button className="btn btn-danger btn-sm" onClick={() => onDelete(loan.id)}>Eliminar</button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+      {showForm && (
+        <LoanFormModal
+          show={showForm}
+          onClose={() => setShowForm(false)}
+          onSaved={load}
+          editLoan={editing}
+        />
       )}
     </div>
   );

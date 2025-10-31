@@ -11,48 +11,39 @@ export class PersonService implements IEntityService<Person, PersonInput> {
 		try {
 			return await em.findOneOrFail(Person, { id });
 		} catch (e) {
-			console.error(`error getById: ${e}`);
-			if (e instanceof NotFoundError) {
-				return null;
-			}
+			if (e instanceof NotFoundError) return null;
 			throw e;
 		}
 	}
+
 	async getAll(): Promise<Person[]> {
-		try {
-			return await em.find(Person, {});
-		} catch (e) {
-			console.error(`error getAll: ${e}`);
-			return [];
-		}
+		return await em.find(Person, {});
 	}
+
 	async create(input: PersonInput): Promise<Person> {
-		try {
-			const person = new Person();
-			person.name = input.name;
-			person.lastName = input.lastName;
-			person.address = input.address;
-			person.phone = input.phone;
-			person.emailAddress = input.emailAddress;
-			em.create(Person, person);
-			await em.flush();
-			return person;
-		} catch (e) {
-			console.error(`error creating person: ${e}`);
-			throw e;
-		}
+		const person = new Person();
+		person.name = input.name;
+		person.lastName = input.lastName;
+		person.address = input.address;
+		person.phone = input.phone;
+		person.emailAddress = input.emailAddress; // ya normalizado por el middleware
+		em.create(Person, person);
+		await em.flush();
+		return person;
 	}
+
 	async update(input: PersonInput): Promise<boolean> {
 		try {
 			const toUpdate = await this.getById(input.id);
 			if (!toUpdate) return false;
-			const person = new Person();
-			person.name = input.name;
-			person.lastName = input.lastName;
-			person.address = input.address;
-			person.phone = input.phone;
-			person.emailAddress = input.emailAddress;
-			em.assign(Person, Person);
+
+			// El email ya viene normalizado por el middleware
+			toUpdate.name = input.name;
+			toUpdate.lastName = input.lastName;
+			toUpdate.address = input.address;
+			toUpdate.phone = input.phone;
+			toUpdate.emailAddress = input.emailAddress;
+
 			await em.flush();
 			return true;
 		} catch (e) {
@@ -60,15 +51,12 @@ export class PersonService implements IEntityService<Person, PersonInput> {
 			throw e;
 		}
 	}
+
+
 	async delete(id: number): Promise<boolean> {
-		try {
-			const toDelete = await this.getById(id);
-			if (!toDelete) return false;
-			await em.removeAndFlush(toDelete);
-			return true;
-		} catch (e) {
-			console.error(`error deleting person: ${e}`);
-			throw e;
-		}
+		const toDelete = await this.getById(id);
+		if (!toDelete) return false;
+		await em.removeAndFlush(toDelete);
+		return true;
 	}
 }
