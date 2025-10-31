@@ -18,7 +18,7 @@ export class User extends BusinessEntity {
 	password!: string;
 	@Property({ nullable: false })
 	role!: string;
-	@Unique()
+	@Unique({ name: 'unique_user_person' })
 	@OneToOne(() => Person, { nullable: false, cascade: [Cascade.PERSIST] })
 	person!: Rel<Person>;
 }
