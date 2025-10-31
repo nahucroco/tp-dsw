@@ -23,18 +23,13 @@ export class Loan extends BusinessEntity {
 	@ManyToOne(() => Person, { nullable: false })
 	person!: Rel<Person>;
 
-	@OneToMany(
-		() => BookCopy,
-		(copy) => copy.loan,
-		{
-			cascade: [Cascade.PERSIST],
-			strategy: LoadStrategy.SELECT_IN,
-		},
-	)
-	bookCopies = new Collection<Rel<BookCopy>>(this);
+	@OneToMany(() => BookCopy, (bc) => bc.loan, { hidden: true })
+	bookCopies = new Collection<BookCopy>(this);
 
-	@Property({ persist: false })
-	get isFull(): boolean {
-		return this.bookCopies.length >= 3;
+	@Property({ persist: false, hidden: true })
+	get isFull(): boolean | undefined {
+		// si no está inicializada, no la tocamos (evita el 500)
+		if (!this.bookCopies.isInitialized()) return undefined;
+		return this.bookCopies.getItems().length >= 3;
 	}
 }

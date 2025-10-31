@@ -78,7 +78,8 @@ function LibrosPage() {
       if (!bookId) continue;
       const cur = m.get(bookId) || { total: 0, libres: 0 };
       cur.total += 1;
-      if (!c.loan && (c.is_available ?? true)) cur.libres += 1;
+      const isAvail = (c.isAvailable ?? c.is_available ?? true);
+      if (!c.loan && isAvail) cur.libres += 1;
       m.set(bookId, cur);
     }
     return m;
@@ -96,18 +97,24 @@ function LibrosPage() {
   const manejarSubmit = async (e) => {
     e.preventDefault();
     if (!titulo || !autorId || !generoId) return;
-
     const payload = {
-      title: titulo,
+      ...(editando ? { id: Number(editando) } : { id: 0 }),
+      title: String(titulo).trim(),
       author: { id: Number(autorId) },
-      gender: { id: Number(generoId) }, // tu back usa "gender"
-      publisher: editorialId ? { id: Number(editorialId) } : null,
+      gender: { id: Number(generoId) },
+      ...(editorialId ? { publisher: { id: Number(editorialId) } } : {}),
     };
 
     if (editando) {
       await api.put(`/books/${editando}`, payload);
     } else {
-      await api.post("/books", payload);
+      try {
+        await api.post("/books", payload);
+      } catch (e) {
+        console.error("POST /books error:", e?.response?.data || e);
+        alert(e?.response?.data?.message || "No se pudo crear el libro.");
+        return;
+      }
     }
 
     limpiarForm();
@@ -128,25 +135,20 @@ function LibrosPage() {
     setEditando(libro.id);
   };
 
-  // ---- Gestor de copias (+ / −) ----
   const agregarCopia = async (bookId) => {
     try {
-      const nextId = copias.length ? Math.max(...copias.map((c) => c.id)) + 1 : 1;
       await BookCopyService.create({
-        id: nextId,
-        is_available: true,
-        condition: getCond(bookId),
-        book: { id: Number(bookId) },
+        bookId: Number(bookId),
+        isAvailable: true,
+        condition: getCond(bookId), 
       });
       await cargarCopias();
     } catch (err) {
-      const data = err?.response?.data;
-      const msg =
-        (typeof data === "string" && data) ||
-        data?.message ||
-        (Array.isArray(data?.issues) && data.issues.map((i) => i.message).join("\n")) ||
-        data?.error ||
-        "No se pudo crear la copia.";
+      const msg = err?.message || "No se pudo crear la copia.";
+      const extra =
+        (Array.isArray(err?.issues) && `\n- ${err.issues.map(i => i.message || i).join("\n- ")}`) || "";
+      console.error("Create copy error:", err?._raw || err);
+      alert(msg + extra);
       alert(msg);
     }
   };
