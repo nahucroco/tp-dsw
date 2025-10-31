@@ -1,11 +1,20 @@
 import api from "../api/axiosConfig";
 
-const base = "/persons";
-
 export const PersonService = {
-  list: () => api.get(base).then(r => r.data),
-  get: (id) => api.get(`${base}/${id}`).then(r => r.data),
-  create: (payload) => api.post(base, payload).then(r => r.data),
-  update: (id, payload) => api.put(`${base}/${id}`, payload).then(r => r.data),
-  remove: (id) => api.delete(`${base}/${id}`).then(r => r.data),
+  async list() {
+    const { data } = await api.get("/persons");
+    return data;
+  },
+  async create(payload) {
+    const { data } = await api.post("/persons", payload);
+    return data;
+  },
+  async update(id, payload) {
+    const { data } = await api.put(`/persons/${id}`, payload);
+    return data;
+  },
+  async remove(id) {
+    await api.delete(`/persons/${id}`);
+    return true;
+  },
 };

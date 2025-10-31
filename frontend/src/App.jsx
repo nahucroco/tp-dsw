@@ -7,7 +7,6 @@ import EditorialesPage from "./pages/EditorialesPage";
 import GenerosPage from "./pages/GenerosPage";
 import LibrosPage from "./pages/LibrosPage";
 import PrestamosPage from "./pages/PrestamosPage";
-import UsuariosPage from "./pages/UsuariosPage";
 import PersonasPage from "./pages/PersonasPage.jsx";
 import RequireAuth from "./routes/RequireAuth";
 import "./styles.css";
@@ -29,7 +28,6 @@ function App() {
             <Route path="/generos" element={<GenerosPage />} />
             <Route path="/libros" element={<LibrosPage />} />
             <Route path="/prestamos" element={<PrestamosPage />} />
-            <Route path="/usuarios" element={<UsuariosPage />} />
             <Route path="/personas" element={<PersonasPage />} />
           </Route>
 

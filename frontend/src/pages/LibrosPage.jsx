@@ -8,11 +8,13 @@ function LibrosPage() {
   const [autores, setAutores] = useState([]);
   const [generos, setGeneros] = useState([]);
   const [copias, setCopias] = useState([]);
+  const [editoriales, setEditoriales] = useState([]);
 
   // form de libro
   const [titulo, setTitulo] = useState("");
   const [autorId, setAutorId] = useState("");
   const [generoId, setGeneroId] = useState("");
+  const [editorialId, setEditorialId] = useState("");
   const [editando, setEditando] = useState(null);
 
   // condición por libro para crear nuevas copias (GOOD/NEW/FAIR/DAMAGED)
@@ -26,11 +28,37 @@ function LibrosPage() {
     const { data } = await api.get("/books");
     setLibros(data);
   };
+
   const cargarListas = async () => {
-    const [a, g] = await Promise.all([api.get("/authors"), api.get("/genders")]);
-    setAutores(a.data);
-    setGeneros(g.data);
+    const fetchOr = async (paths) => {
+      let lastErr;
+      for (const p of paths) {
+        try {
+          return (await api.get(p)).data;
+        } catch (e) {
+          lastErr = e;
+        }
+      }
+      throw lastErr;
+    };
+
+    try {
+      const autoresData = await fetchOr(["/authors", "/autores"]);
+      setAutores(autoresData);
+
+      // En tu back la entidad es Gender
+      const generosData = await fetchOr(["/genders", "/genres", "/generos"]);
+      setGeneros(generosData);
+
+      // Publisher / Editorial
+      const editorialesData = await fetchOr(["/publishers", "/editoriales"]);
+      setEditoriales(editorialesData);
+    } catch (e) {
+      console.error("Error cargando listas:", e?.response?.data || e);
+      alert("No se pudieron cargar autores/géneros/editoriales. Verificá endpoints.");
+    }
   };
+
   const cargarCopias = async () => {
     const data = await BookCopyService.list();
     setCopias(data);
@@ -50,7 +78,6 @@ function LibrosPage() {
       if (!bookId) continue;
       const cur = m.get(bookId) || { total: 0, libres: 0 };
       cur.total += 1;
-      // libre si NO está asociada a un loan y además está marcada disponible
       if (!c.loan && (c.is_available ?? true)) cur.libres += 1;
       m.set(bookId, cur);
     }
@@ -58,29 +85,32 @@ function LibrosPage() {
   }, [copias]);
 
   // ---- CRUD libros ----
+  const limpiarForm = () => {
+    setTitulo("");
+    setAutorId("");
+    setGeneroId("");
+    setEditorialId("");
+    setEditando(null);
+  };
+
   const manejarSubmit = async (e) => {
     e.preventDefault();
     if (!titulo || !autorId || !generoId) return;
 
     const payload = {
-      id:
-        editando ??
-        (libros.length ? Math.max(...libros.map((l) => l.id)) + 1 : 1),
       title: titulo,
       author: { id: Number(autorId) },
-      gender: { id: Number(generoId) },
+      gender: { id: Number(generoId) }, // tu back usa "gender"
+      publisher: editorialId ? { id: Number(editorialId) } : null,
     };
 
     if (editando) {
       await api.put(`/books/${editando}`, payload);
-      setEditando(null);
     } else {
       await api.post("/books", payload);
     }
 
-    setTitulo("");
-    setAutorId("");
-    setGeneroId("");
+    limpiarForm();
     await cargarLibros();
   };
 
@@ -94,19 +124,18 @@ function LibrosPage() {
     setTitulo(libro.title);
     setAutorId(libro.author?.id ?? "");
     setGeneroId(libro.gender?.id ?? "");
+    setEditorialId(libro.publisher?.id ?? "");
     setEditando(libro.id);
   };
 
   // ---- Gestor de copias (+ / −) ----
   const agregarCopia = async (bookId) => {
     try {
-      const nextId = copias.length
-        ? Math.max(...copias.map((c) => c.id)) + 1
-        : 1;
+      const nextId = copias.length ? Math.max(...copias.map((c) => c.id)) + 1 : 1;
       await BookCopyService.create({
         id: nextId,
         is_available: true,
-        condition: getCond(bookId), // GOOD/NEW/FAIR/DAMAGED
+        condition: getCond(bookId),
         book: { id: Number(bookId) },
       });
       await cargarCopias();
@@ -115,8 +144,7 @@ function LibrosPage() {
       const msg =
         (typeof data === "string" && data) ||
         data?.message ||
-        (Array.isArray(data?.issues) &&
-          data.issues.map((i) => i.message).join("\n")) ||
+        (Array.isArray(data?.issues) && data.issues.map((i) => i.message).join("\n")) ||
         data?.error ||
         "No se pudo crear la copia.";
       alert(msg);
@@ -125,14 +153,9 @@ function LibrosPage() {
 
   const quitarCopia = async (bookId) => {
     try {
-      // solo se quitan copias que estén libres
-      const candidates = copias.filter(
-        (c) => c.book?.id === bookId && !c.loan
-      );
+      const candidates = copias.filter((c) => c.book?.id === bookId && !c.loan);
       if (candidates.length === 0) {
-        return alert(
-          "No podés quitar: todas las copias de este libro están prestadas."
-        );
+        return alert("No podés quitar: todas las copias de este libro están prestadas.");
       }
       await BookCopyService.remove(candidates[0].id);
       await cargarCopias();
@@ -141,8 +164,7 @@ function LibrosPage() {
       const msg =
         (typeof data === "string" && data) ||
         data?.message ||
-        (Array.isArray(data?.issues) &&
-          data.issues.map((i) => i.message).join("\n")) ||
+        (Array.isArray(data?.issues) && data.issues.map((i) => i.message).join("\n")) ||
         data?.error ||
         "No se pudo quitar la copia.";
       alert(msg);
@@ -150,9 +172,7 @@ function LibrosPage() {
   };
 
   const librosOrdenados = [...libros].sort((a, b) =>
-    (a.gender?.description ?? "").localeCompare(
-      b.gender?.description ?? ""
-    )
+    (a.gender?.description ?? "").localeCompare(b.gender?.description ?? "")
   );
 
   return (
@@ -173,30 +193,33 @@ function LibrosPage() {
           </div>
 
           <div className="col-md-3 col-lg-3">
-            <select
-              className="form-select"
-              value={autorId}
-              onChange={(e) => setAutorId(e.target.value)}
-            >
+            <select className="form-select" value={autorId} onChange={(e) => setAutorId(e.target.value)}>
               <option value="">Autor</option>
               {autores.map((a) => (
                 <option key={a.id} value={a.id}>
-                  {a.name}
+                  {a.name ?? a.nombre}
                 </option>
               ))}
             </select>
           </div>
 
           <div className="col-md-3 col-lg-3">
-            <select
-              className="form-select"
-              value={generoId}
-              onChange={(e) => setGeneroId(e.target.value)}
-            >
+            <select className="form-select" value={generoId} onChange={(e) => setGeneroId(e.target.value)}>
               <option value="">Género</option>
               {generos.map((g) => (
                 <option key={g.id} value={g.id}>
-                  {g.description}
+                  {g.description ?? g.descripcion ?? g.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="col-md-3 col-lg-3">
+            <select className="form-select" value={editorialId} onChange={(e) => setEditorialId(e.target.value)}>
+              <option value="">Editorial</option>
+              {editoriales.map((ed) => (
+                <option key={ed.id} value={ed.id}>
+                  {ed.name ?? ed.nombre}
                 </option>
               ))}
             </select>
@@ -217,6 +240,7 @@ function LibrosPage() {
             <th>Título</th>
             <th>Autor</th>
             <th>Género</th>
+            <th>Editorial</th>
             <th style={{ width: 300 }}>Copias</th>
             <th className="text-end">Acciones</th>
           </tr>
@@ -224,22 +248,16 @@ function LibrosPage() {
         <tbody>
           {librosOrdenados.map((libro, i) => {
             const curr = libro.gender?.description ?? "Sin género";
-            const prev =
-              i > 0
-                ? librosOrdenados[i - 1].gender?.description ?? "Sin género"
-                : null;
+            const prev = i > 0 ? librosOrdenados[i - 1].gender?.description ?? "Sin género" : null;
             const header = i === 0 || curr !== prev;
 
-            const st = statsPorLibro.get(libro.id) || {
-              total: 0,
-              libres: 0,
-            };
+            const st = statsPorLibro.get(libro.id) || { total: 0, libres: 0 };
 
             return (
               <Fragment key={`g-${curr}-${libro.id}`}>
                 {header && (
                   <tr className="table-secondary">
-                    <td colSpan="5" className="fw-bold text-center">
+                    <td colSpan="6" className="fw-bold text-center">
                       {curr}
                     </td>
                   </tr>
@@ -248,16 +266,15 @@ function LibrosPage() {
                   <td>{libro.title}</td>
                   <td>{libro.author?.name ?? "-"}</td>
                   <td>{libro.gender?.description ?? "-"}</td>
+                  <td>{libro.publisher?.name ?? libro.editorial?.nombre ?? "-"}</td>
                   <td>
                     <div className="d-flex align-items-center gap-2">
                       <span>
                         {st.total}{" "}
-                        <small className="text-muted">
-                          ({st.libres} libres)
-                        </small>
+                        <small className="text-muted">({st.libres} libres)</small>
                       </span>
 
-                      {/* selector condición para NUEVAS copias de ESTE libro */}
+                      {/* condición para nuevas copias */}
                       <select
                         className="form-select form-select-sm"
                         style={{ width: 140 }}
@@ -291,16 +308,10 @@ function LibrosPage() {
                     </div>
                   </td>
                   <td className="text-end">
-                    <button
-                      className="btn btn-warning btn-sm me-2"
-                      onClick={() => manejarEditar(libro)}
-                    >
+                    <button className="btn btn-warning btn-sm me-2" onClick={() => manejarEditar(libro)}>
                       Editar
                     </button>
-                    <button
-                      className="btn btn-danger btn-sm"
-                      onClick={() => manejarEliminar(libro.id)}
-                    >
+                    <button className="btn btn-danger btn-sm" onClick={() => manejarEliminar(libro.id)}>
                       Eliminar
                     </button>
                   </td>

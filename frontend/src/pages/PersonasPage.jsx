@@ -1,99 +1,152 @@
 import { useEffect, useState } from "react";
+import SanctionModal from "../components/SanctionModal";
+import PersonFormModal from "../components/PersonFormModal";
+import { SanctionService } from "../services/SanctionService";
 import { PersonService } from "../services/PersonService";
 
-const empty = { name:"", lastName:"", address:"", phone:"", emailAddress:"" };
-
 export default function PersonasPage() {
-  const [list, setList] = useState([]);
-  const [form, setForm] = useState(empty);
-  const [editId, setEditId] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [personas, setPersonas] = useState([]);
+  const [sanctionsByPerson, setSanctionsByPerson] = useState({});
 
-  const load = async () => {
-    setLoading(true);
-    try { setList(await PersonService.list()); }
-    finally { setLoading(false); }
+  const [showSanction, setShowSanction] = useState(false);
+  const [selectedPerson, setSelectedPerson] = useState(null);
+
+  const [showPersonForm, setShowPersonForm] = useState(false);
+  const [editingPerson, setEditingPerson] = useState(null);
+
+  useEffect(() => {
+    cargarPersonas();
+  }, []);
+
+  async function cargarPersonas() {
+    const data = await PersonService.list();
+    setPersonas(data);
+    const pairs = await Promise.all(
+      data.map(async (p) => [p.id, await SanctionService.listByPerson(p.id)])
+    );
+    setSanctionsByPerson(Object.fromEntries(pairs));
+  }
+
+  const openCreate = () => {
+    setEditingPerson(null);
+    setShowPersonForm(true);
+  };
+  const openEdit = (p) => {
+    setEditingPerson(p);
+    setShowPersonForm(true);
+  };
+  const closePersonForm = async (refresh) => {
+    setShowPersonForm(false);
+    setEditingPerson(null);
+    if (refresh) await cargarPersonas();
   };
 
-  useEffect(() => { load(); }, []);
-
-  const onChange = (e) => setForm({ ...form, [e.target.name]: e.target.value });
-
-  const onSubmit = async (e) => {
-    e.preventDefault();
-    const { name, lastName, address, phone, emailAddress } = form;
-    if (!name || !lastName || !address || !phone || !emailAddress) return;
-
-    try {
-      if (editId) {
-        await PersonService.update(editId, { id: editId, ...form });
-        setEditId(null);
-      } else {
-        const nextId = list.length ? Math.max(...list.map(p => p.id)) + 1 : 1;
-        await PersonService.create({ id: nextId, ...form });
-      }
-      setForm(empty);
-      await load();
-    } catch (err) {
-      alert(err?.response?.data?.message ?? "No se pudo guardar la persona.");
-    }
+  const openSancionar = (p) => {
+    setSelectedPerson(p);
+    setShowSanction(true);
+  };
+  const closeSancionar = async (refresh) => {
+    setShowSanction(false);
+    setSelectedPerson(null);
+    if (refresh) await cargarPersonas();
   };
 
-  const onEdit = (p) => {
-    setEditId(p.id);
-    setForm({
-      name: p.name ?? "",
-      lastName: p.lastName ?? "",
-      address: p.address ?? "",
-      phone: p.phone ?? "",
-      emailAddress: p.emailAddress ?? "",
-    });
-  };
-
-  const onDelete = async (id) => {
-    if (!confirm("¿Eliminar persona?")) return;
-    await PersonService.remove(id);
-    await load();
+  const removePerson = async (p) => {
+    if (!confirm(`Eliminar a "${p.name} ${p.lastName}"?`)) return;
+    await PersonService.remove(p.id);
+    await cargarPersonas();
   };
 
   return (
-    <div className="col-md-10 mx-auto">
-      <h2 className="mb-3 text-center">Personas</h2>
+    <div className="container py-3">
+      <div className="d-flex align-items-center justify-content-between mb-3">
+        <h2 className="m-0">Personas</h2>
+        <button className="btn btn-primary" onClick={openCreate}>
+          Nueva persona
+        </button>
+      </div>
 
-      <form onSubmit={onSubmit} className="mb-4">
-        <div className="row g-2">
-          <div className="col-md-3"><input className="form-control" name="name" placeholder="Nombre" value={form.name} onChange={onChange} /></div>
-          <div className="col-md-3"><input className="form-control" name="lastName" placeholder="Apellido" value={form.lastName} onChange={onChange} /></div>
-          <div className="col-md-3"><input className="form-control" name="emailAddress" placeholder="Email" value={form.emailAddress} onChange={onChange} /></div>
-          <div className="col-md-2"><input className="form-control" name="phone" placeholder="Teléfono" value={form.phone} onChange={onChange} /></div>
-          <div className="col-md-6 mt-2"><input className="form-control" name="address" placeholder="Dirección" value={form.address} onChange={onChange} /></div>
-          <div className="col-md-2 mt-2">
-            <button className="btn btn-primary w-100" type="submit">{editId ? "Actualizar" : "Agregar"}</button>
-          </div>
-        </div>
-      </form>
-
-      {loading ? <p>Cargando…</p> : (
-        <table className="table table-striped">
+      <div className="table-responsive">
+        <table className="table table-striped align-middle">
           <thead>
-            <tr><th>Nombre</th><th>Email</th><th>Teléfono</th><th>Dirección</th><th className="text-end">Acciones</th></tr>
+            <tr>
+              <th>#</th>
+              <th>Nombre</th>
+              <th>Mail</th>
+              <th>Teléfono</th>
+              <th>Sanciones</th>
+              <th className="text-end">Acciones</th>
+            </tr>
           </thead>
           <tbody>
-            {list.map(p => (
-              <tr key={p.id}>
-                <td>{p.name} {p.lastName}</td>
-                <td>{p.emailAddress}</td>
-                <td>{p.phone}</td>
-                <td>{p.address}</td>
-                <td className="text-end">
-                  <button className="btn btn-warning btn-sm me-2" onClick={() => onEdit(p)}>Editar</button>
-                  <button className="btn btn-danger btn-sm" onClick={() => onDelete(p.id)}>Eliminar</button>
-                </td>
-              </tr>
-            ))}
+            {personas.map((p) => {
+              const sancs = sanctionsByPerson[p.id] || [];
+              const activas = sancs.filter((s) => !s.revokedAt);
+              return (
+                <tr key={p.id}>
+                  <td>{p.id}</td>
+                  <td>
+                    {p.name} {p.lastName}
+                    {activas.length > 0 && (
+                      <span className="badge text-bg-danger ms-2">
+                        {activas.length} activa{activas.length > 1 ? "s" : ""}
+                      </span>
+                    )}
+                  </td>
+                  <td>{p.emailAddress}</td>
+                  <td>{p.phone || "-"}</td>
+                  <td>
+                    {sancs.length === 0 ? (
+                      <span className="text-secondary">—</span>
+                    ) : (
+                      <div className="d-flex flex-column gap-1">
+                        {sancs.slice(0, 2).map((s) => (
+                          <div key={s.id} className="d-flex align-items-center gap-2">
+                            <span className={`badge ${s.revokedAt ? "text-bg-secondary" : "text-bg-danger"}`}>
+                              {s.revokedAt ? "Revocada" : "Activa"}
+                            </span>
+                            <span className="small text-truncate" style={{ maxWidth: 260 }} title={s.reason}>
+                              {s.reason}
+                            </span>
+                            {!s.revokedAt && (
+                              <button
+                                className="btn btn-sm btn-outline-secondary"
+                                onClick={async () => {
+                                  await SanctionService.revoke(s.id);
+                                  await cargarPersonas();
+                                }}
+                              >
+                                Revocar
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                        {sancs.length > 2 && <span className="small text-muted">y {sancs.length - 2} más…</span>}
+                      </div>
+                    )}
+                  </td>
+                  <td className="text-end">
+                    <div className="btn-group">
+                      <button className="btn btn-sm btn-outline-secondary" onClick={() => openEdit(p)}>
+                        Editar
+                      </button>
+                      <button className="btn btn-sm btn-outline-danger" onClick={() => openSancionar(p)}>
+                        Sancionar
+                      </button>
+                      <button className="btn btn-sm btn-outline-dark" onClick={() => removePerson(p)}>
+                        Eliminar
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
-      )}
+      </div>
+
+      <PersonFormModal show={showPersonForm} onClose={closePersonForm} editing={editingPerson} />
+      <SanctionModal show={showSanction} onClose={closeSancionar} person={selectedPerson} />
     </div>
   );
 }
