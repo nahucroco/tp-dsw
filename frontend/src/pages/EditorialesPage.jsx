@@ -5,47 +5,108 @@ function EditorialesPage() {
   const [editoriales, setEditoriales] = useState([]);
   const [nombre, setNombre] = useState("");
   const [editando, setEditando] = useState(null);
+  const [cargando, setCargando] = useState(false);
 
-  // Cargar autores al montar el componente
-  useEffect(() => {
-    cargarEditoriales();
-  }, []);
+  const norm = (e) => ({ id: e.id, name: e.name ?? e.nombre });
 
-  // Simulación temporal sin backend
-  const cargarEditoriales = async () => {
-    // ⚠️ Cuando tengan el endpoint real, reemplazá esto por:
-    // const res = await api.get("/autores");
-    // setEditoriales(res.data);
-    setEditoriales([
-      { id: 1, nombre: "Planeta" },
-      { id: 2, nombre: "Alianza" },
-    ]);
+  // ------- API (solo /publishers) -------
+  const listPublishers = async () => {
+    const { data } = await api.get("/publishers");
+    return data.map(norm).sort((a, b) => (a.name || "").localeCompare(b.name || ""));
   };
 
+  const createPublisher = async (name) => {
+    try {
+      const { data } = await api.post("/publishers", { name });
+      return norm(data);
+    } catch (err) {
+      // reintento por si el backend exige id
+      const reason = err?.response?.data;
+      console.error("POST /publishers -> 1er intento falló:", reason);
+      const tmpId = Math.floor(Date.now() / 1000);
+      const { data } = await api.post("/publishers", { id: tmpId, name });
+      return norm(data);
+    }
+  };
+
+  const updatePublisher = async (id, name) => {
+    try {
+      const { data } = await api.put(`/publishers/${id}`, { name });
+      return norm(data);
+    } catch (err) {
+      const reason = err?.response?.data;
+      console.error("PUT /publishers/:id falló:", reason);
+      // reintento incluyendo id en el body si el backend lo pide
+      const { data } = await api.put(`/publishers/${id}`, { id, name });
+      return norm(data);
+    }
+  };
+
+  const deletePublisher = async (id) => {
+    await api.delete(`/publishers/${id}`);
+  };
+
+  // ------- carga inicial -------
+  useEffect(() => {
+    (async () => {
+      setCargando(true);
+      try {
+        setEditoriales(await listPublishers());
+      } catch (e) {
+        console.error("GET /publishers falló:", e?.response?.data || e);
+        alert("No se pudieron cargar las editoriales (revisá el backend /api/publishers).");
+      } finally {
+        setCargando(false);
+      }
+    })();
+  }, []);
+
+  // ------- acciones -------
   const manejarSubmit = async (e) => {
     e.preventDefault();
-    if (nombre.trim() === "") return;
+    const name = nombre.trim();
+    if (!name) return;
 
-    if (editando) {
-      // await api.put(`/editoriales/${editando}`, { nombre });
-      setEditoriales(editoriales.map((a) => (a.id === editando ? { ...a, nombre } : a)));
-      setEditando(null);
-    } else {
-      // await api.post("/editoriales", { nombre });
-      const nuevaEditorial = { id: Date.now(), nombre };
-      setEditoriales([...editoriales, nuevaEditorial]);
+    setCargando(true);
+    try {
+      if (editando) {
+        const updated = await updatePublisher(editando, name);
+        setEditoriales((prev) =>
+          prev.map((it) => (it.id === editando ? updated : it))
+              .sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+        );
+        setEditando(null);
+      } else {
+        const created = await createPublisher(name);
+        setEditoriales((prev) =>
+          [...prev, created].sort((a, b) => (a.name || "").localeCompare(b.name || ""))
+        );
+      }
+      setNombre("");
+    } catch (e2) {
+      console.error("Guardar editorial falló:", e2?.response?.data || e2);
+      alert("No se pudo guardar la editorial.");
+    } finally {
+      setCargando(false);
     }
-
-    setNombre("");
   };
 
   const manejarEliminar = async (id) => {
-    // await api.delete(`/editoriales/${id}`);
-    setEditoriales(editoriales.filter((a) => a.id !== id));
+    if (!confirm("¿Eliminar esta editorial?")) return;
+    setCargando(true);
+    try {
+      await deletePublisher(id);
+      setEditoriales((prev) => prev.filter((it) => it.id !== id));
+    } catch (e) {
+      console.error("DELETE /publishers/:id falló:", e?.response?.data || e);
+      alert("No se pudo eliminar la editorial. Verificá que no tenga libros asociados.");
+    } finally {
+      setCargando(false);
+    }
   };
 
   const manejarEditar = (editorial) => {
-    setNombre(editorial.nombre);
+    setNombre(editorial.name ?? "");
     setEditando(editorial.id);
   };
 
@@ -53,7 +114,6 @@ function EditorialesPage() {
     <div className="col-md-8 mx-auto">
       <h2 className="mb-3 text-center">Editoriales</h2>
 
-      {/* Formulario */}
       <form onSubmit={manejarSubmit} className="mb-4">
         <div className="input-group">
           <input
@@ -62,38 +122,58 @@ function EditorialesPage() {
             placeholder="Nombre de la editorial"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
+            disabled={cargando}
           />
-          <button className="btn btn-primary" type="submit">
+          <button className="btn btn-primary" type="submit" disabled={cargando || !nombre.trim()}>
             {editando ? "Actualizar" : "Agregar"}
           </button>
+          {editando && (
+            <button
+              type="button"
+              className="btn btn-outline-secondary"
+              onClick={() => {
+                setEditando(null);
+                setNombre("");
+              }}
+              disabled={cargando}
+            >
+              Cancelar
+            </button>
+          )}
         </div>
       </form>
 
-      {/* Listado */}
-      <ul className="list-group">
-        {editoriales.map((editorial) => (
-          <li
-            key={editorial.id}
-            className="list-group-item d-flex justify-content-between align-items-center"
-          >
-            <span>{editorial.nombre}</span>
-            <div>
-              <button
-                className="btn btn-sm btn-warning me-2"
-                onClick={() => manejarEditar(editorial)}
-              >
-                Editar
-              </button>
-              <button
-                className="btn btn-sm btn-danger"
-                onClick={() => manejarEliminar(editorial.id)}
-              >
-                Eliminar
-              </button>
-            </div>
-          </li>
-        ))}
-      </ul>
+      {cargando && !editoriales.length ? (
+        <p className="text-muted">Cargando…</p>
+      ) : (
+        <ul className="list-group">
+          {editoriales.map((editorial) => (
+            <li
+              key={editorial.id}
+              className="list-group-item d-flex justify-content-between align-items-center"
+            >
+              <span>{editorial.name}</span>
+              <div>
+                <button
+                  className="btn btn-sm btn-warning me-2"
+                  onClick={() => manejarEditar(editorial)}
+                  disabled={cargando}
+                >
+                  Editar
+                </button>
+                <button
+                  className="btn btn-sm btn-danger"
+                  onClick={() => manejarEliminar(editorial.id)}
+                  disabled={cargando}
+                >
+                  Eliminar
+                </button>
+              </div>
+            </li>
+          ))}
+          {!editoriales.length && <li className="list-group-item">Sin editoriales.</li>}
+        </ul>
+      )}
     </div>
   );
 }

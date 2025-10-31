@@ -4,13 +4,13 @@ import { LoanService } from "../services/LoanService.js";
 import { PersonService } from "../services/PersonService.js";
 import { BookCopyService } from "../services/BookCopyService.js";
 
-const empty = { start_date:"", end_date:"", personId:"", bookIds:[] };
+const empty = { start_date: "", end_date: "", personId: "", bookIds: [] };
 
 const ymd = (d) => {
   if (!d) return "";
   const dt = new Date(d);
-  const m = String(dt.getMonth()+1).padStart(2,"0");
-  const day = String(dt.getDate()).padStart(2,"0");
+  const m = String(dt.getMonth() + 1).padStart(2, "0");
+  const day = String(dt.getDate()).padStart(2, "0");
   return `${dt.getFullYear()}-${m}-${day}`;
 };
 
@@ -67,20 +67,42 @@ export default function PrestamosPage() {
     });
   };
 
+  const currentLoan = useMemo(
+    () => loans.find(l => l.id === editId) || null,
+    [loans, editId]
+  );
+
   // Resolver copias libres para los libros seleccionados
   const resolveCopiesForSelectedBooks = () => {
-    const chosen = [];
-    for (const bId of form.bookIds) {
-      const arr = availableByBook.get(bId) || [];
-      if (arr.length === 0) {
-        const book = books.find(b => b.id === bId);
-        const title = book?.title ?? `Libro ${bId}`;
-        throw new Error(`No hay copias disponibles de "${title}".`);
+    // mapa: bookId -> copyId actualmente asignada en el préstamo
+    const currentByBook = new Map();
+    if (currentLoan && Array.isArray(currentLoan.bookCopies)) {
+      for (const c of currentLoan.bookCopies) {
+        const bId = c.book?.id ?? copies.find(x => x.id === c.id)?.book?.id ?? null;
+        if (bId && !currentByBook.has(bId)) currentByBook.set(bId, c.id);
       }
-      // tomar la primera libre (simple)
-      chosen.push({ id: arr[0].id });
     }
-    return chosen;
+
+    const selected = new Set(form.bookIds);
+
+    // libros nuevos = seleccionados que antes no estaban
+    const toAdd = [...selected].filter(bId => !currentByBook.has(bId));
+
+    // ⚠️ si quitaste libros, por ahora no los mandamos a borrar aquí
+    // (si necesitás remover, luego vemos si el back tiene endpoint para “remover copia”)
+
+    // para cada libro nuevo, elegir una copia libre
+    const newCopies = [];
+    for (const bId of toAdd) {
+      const libres = availableByBook.get(bId) || [];
+      if (libres.length === 0) {
+        const book = books.find(b => b.id === bId);
+        throw new Error(`No hay copias disponibles de "${book?.title ?? "Libro " + bId}".`);
+      }
+      newCopies.push({ id: libres[0].id });
+    }
+
+    return newCopies; // 👈 solo las NUEVAS copias que hay que agregar
   };
 
   const onSubmit = async (e) => {
@@ -91,28 +113,43 @@ export default function PrestamosPage() {
     }
 
     try {
-      const bookCopies = resolveCopiesForSelectedBooks();
+      const bookCopies = resolveCopiesForSelectedBooks(); // 👈 solo nuevas
+
+      const dStart = new Date(start_date);
+      const dEnd = new Date(end_date);
 
       if (editId) {
-        await LoanService.update(editId, {
-          id: editId,
-          start_date: new Date(start_date),
-          end_date: new Date(end_date),
-          person: { id: Number(personId) },
-          bookCopies,
-        });
+        // Envío solo las NUEVAS copias; las actuales el back las mantiene
+        const shapes = [
+          { id: editId, startDate: dStart, endDate: dEnd, person: { id: Number(personId) }, bookCopies },
+          { id: editId, start_date: dStart, end_date: dEnd, person: { id: Number(personId) }, bookCopies },
+          { id: editId, startDate: dStart, endDate: dEnd, personId: Number(personId), bookCopies },
+        ];
+
+        let lastErr;
+        for (const payload of shapes) {
+          try { await LoanService.update(editId, payload); lastErr = null; break; }
+          catch (e) { console.warn("Intento fallido con payload:", payload, "→", e?.response?.data || e); lastErr = e; }
+        }
+        if (lastErr) throw lastErr;
+
         setEditId(null);
       } else {
-        // tu back exige id en create
+        // create igual que antes
         const nextId = loans.length ? Math.max(...loans.map(l => l.id)) + 1 : 1;
         await LoanService.create({
           id: nextId,
-          start_date: new Date(start_date),
-          end_date: new Date(end_date),
+          start_date: dStart,
+          end_date: dEnd,
           person: { id: Number(personId) },
-          bookCopies,
+          bookCopies: form.bookIds.map(bId => {
+            const libres = availableByBook.get(bId) || [];
+            if (!libres.length) throw new Error("No hay copias disponibles de algún libro.");
+            return { id: libres[0].id };
+          }),
         });
       }
+
       setForm(empty);
       await load();
     } catch (err) {
@@ -121,9 +158,9 @@ export default function PrestamosPage() {
         (err instanceof Error && err.message) ||
         (typeof data === "string" && data) ||
         data?.message ||
+        (Array.isArray(data?.errors) && data.errors.map(i => i.message || i).join("\n")) ||
         (Array.isArray(data?.issues) && data.issues.map(i => i.message).join("\n")) ||
-        data?.error ||
-        "No se pudo guardar el préstamo.";
+        data?.error || "No se pudo guardar el préstamo.";
       alert(msg);
     }
   };
@@ -159,12 +196,12 @@ export default function PrestamosPage() {
           <div className="col-md-3">
             <label className="form-label">Inicio</label>
             <input type="date" className="form-control" name="start_date"
-              value={form.start_date} onChange={onChange}/>
+              value={form.start_date} onChange={onChange} />
           </div>
           <div className="col-md-3">
             <label className="form-label">Fin</label>
             <input type="date" className="form-control" name="end_date"
-              value={form.end_date} onChange={onChange}/>
+              value={form.end_date} onChange={onChange} />
           </div>
           <div className="col-md-3">
             <label className="form-label">Persona</label>
@@ -183,7 +220,7 @@ export default function PrestamosPage() {
             <label className="form-label">
               Libros (hasta 3)
             </label>
-            <div className="border rounded p-2" style={{maxHeight:180, overflowY:"auto"}}>
+            <div className="border rounded p-2" style={{ maxHeight: 180, overflowY: "auto" }}>
               {books.map(b => {
                 const selected = form.bookIds.includes(b.id);
                 const avail = (availableByBook.get(b.id) || []).length;

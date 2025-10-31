@@ -7,7 +7,6 @@ const LINKS = [
   { to: "/generos", label: "Géneros" },
   { to: "/libros", label: "Libros" },
   { to: "/prestamos", label: "Préstamos" },
-  { to: "/usuarios", label: "Usuarios" },
   { to: "/personas", label: "Personas" },
 ];
 
