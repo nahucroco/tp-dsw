@@ -2,6 +2,7 @@ import 'reflect-metadata';
 import { RequestContext } from '@mikro-orm/core';
 import express from 'express';
 import { orm, syncSchema } from './data/orm.js';
+import { errorHandler } from './middlewares/errorHandler.js';
 import authorRoutes from './routes/authorRoutes.js';
 import bookCopyRoutes from './routes/bookCopyRoutes.js';
 import bookRoutes from './routes/bookRoutes.js';
@@ -30,6 +31,7 @@ app.use(
 );
 
 app.use(express.json());
+
 app.use(
 	(
 		_req: express.Request,
@@ -52,4 +54,5 @@ app.use('/api/sanctions', sanctionRoutes);
 app.use((_req: express.Request, res: express.Response) => {
 	return res.status(404).send({ message: 'Not Found' });
 });
+app.use(errorHandler);
 export default app;
