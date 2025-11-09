@@ -121,7 +121,7 @@ Content-Type: application/json
   "lastName": "di maria",
   "address": "direccion",
   "phone": "123455",
-  "emailAddress": "dimaria@gmail.com"
+  "emailAddress": "dimarias@gmail.com"
 }
 
 ### Update Person
@@ -131,10 +131,10 @@ Content-Type: application/json
 {
 "id": 1,
 "name":"fideo",
-"lastName": "di maria",
+"lastName": "dimaria",
 "address": "direccion",
 "phone": "123455",
-"emailAddress": "dimaria@gmail.com"
+"emailAddress": "dimarias@gmail.com"
 }
 ###
 DELETE http://localhost:3000/api/persons/4
@@ -148,7 +148,7 @@ Content-Type: application/json
   "id": 0,
   "username": "c",
   "password": "Messi123",
-  "person": {"id":  5}
+  "person": {"id":  1}
 }
 ###
 DELETE http://localhost:3000/api/users/6
