@@ -24,7 +24,7 @@ Esta aplicación permite administrar eficientemente una biblioteca, gestionando 
 
 |Req|Detalle|
 |:-|:-|
-|CRUD simple|1. CRUD Libro<br>2. CRUD Usuario<br>3. CRUD Género<br>4. CRUD Idioma<br>5. CRUD Editorial<br>6. CRUD Autor<br>7. CRUD País|
+|CRUD simple|1. CRUD Libro<br>2. CRUD Usuario<br>3. CRUD Género<br>4. CRUD Editorial<br>5. CRUD Autor|
 |CRUD dependiente|1. CRUD Préstamo {depende de} CRUD Libro y CRUD Usuario<br>2. CRUD ListaLectura {depende de} CRUD Usuario|
 |Listado<br>+<br>detalle| 1. Listado de libros filtrado por género, muestra título y autor de libro => detalle CRUD Libro|
 |CUU/Epic|1. Dejar una reseña<br>2. Sancionar a un usuario<br>3. Solicitar libro|
