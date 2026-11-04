@@ -1,5 +1,5 @@
 import { NotFoundError } from '@mikro-orm/core';
-import { orm } from '../data/orm.js';
+import { orm } from '../infrastructure/orm.js';
 import { Author } from '../models/Author.js';
 import type { AuthorInput } from '../schemas/AuthorSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';

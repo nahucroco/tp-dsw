@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { RequestContext } from '@mikro-orm/core';
 import express from 'express';
-import { orm, syncSchema } from './data/orm.js';
+import { orm, syncSchema } from './infrastructure/orm.js';
 import { errorHandler } from './middlewares/errorHandler.js';
 import authorRoutes from './routes/authorRoutes.js';
 import bookCopyRoutes from './routes/bookCopyRoutes.js';

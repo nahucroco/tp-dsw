@@ -17,6 +17,6 @@ export const orm = await MikroORM.init({
 	},
 });
 export const syncSchema = async () => {
-	const generator = orm.getSchemaGenerator();
+	const generator = orm.schema;
 	await generator.updateSchema();
 };

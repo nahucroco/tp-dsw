@@ -7,7 +7,7 @@ function normalizeArray(payload) {
   if (Array.isArray(payload)) return payload;
   if (Array.isArray(payload.items)) return payload.items;
   if (Array.isArray(payload.results)) return payload.results;
-  // a veces viene paginado como { data: { items: [] } }
+  // a veces viene paginado como { infrastructure: { items: [] } }
   if (payload.data) return normalizeArray(payload.data);
   return [];
 }

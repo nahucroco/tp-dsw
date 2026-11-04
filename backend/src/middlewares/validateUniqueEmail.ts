@@ -1,6 +1,6 @@
 import type { FilterQuery } from '@mikro-orm/core';
 import type { NextFunction, Request, Response } from 'express';
-import { orm } from '../data/orm.js';
+import { orm } from '../infrastructure/orm.js';
 import { Person } from '../models/Person.js';
 
 const em = orm.em;

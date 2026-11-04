@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { UserInput } from '../schemas/UserSchema.js';
-import { UserService } from '../services/UserService.js';
+import UserService from '../services/UserService.js';
 
 const userService = new UserService();
 
