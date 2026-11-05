@@ -2,8 +2,8 @@ import { Router } from 'express';
 import {
 	createAuthor,
 	deleteAuthor,
-	getAuthors,
 	getAuthorById,
+	getAuthors,
 	updateAuthor,
 } from '../controllers/AuthorController.js';
 import { validateBody } from '../middlewares/validateBody.js';

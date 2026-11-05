@@ -16,7 +16,7 @@ export class User extends BusinessEntity {
 	@Property({ nullable: false })
 	@Unique()
 	username!: string;
-	@Property({ nullable: false })
+	@Property({ nullable: false, hidden: true })
 	password!: string;
 	@Enum(() => UserRole)
 	role!: UserRole;

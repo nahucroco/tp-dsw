@@ -34,3 +34,16 @@ export const logoutUser = async (
 		next(e);
 	}
 };
+
+export const me = async (req: Request, res: Response, next: NextFunction) => {
+	try {
+		const id = req.user?.userId;
+		if (!id) return res.status(401).json({ error: 'Invalid credentials' });
+		const currentUser = await userService.getById(id);
+		if (!currentUser)
+			return res.status(404).json({ message: 'User not found' });
+		return res.status(200).json(currentUser);
+	} catch (e) {
+		next(e);
+	}
+};
