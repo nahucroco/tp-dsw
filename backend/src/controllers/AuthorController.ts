@@ -1,6 +1,8 @@
 import type { NextFunction, Request, Response } from 'express';
 import type { AuthorInput } from '../schemas/AuthorSchema.js';
 import { AuthorService } from '../services/AuthorService.js';
+import { ValidationError } from '../errrors/ValidationError.js';
+import { NotFoundError } from '../errrors/NotFoundError.js';
 
 const authorService = new AuthorService();
 
@@ -25,7 +27,7 @@ export const getAuthorById = async (
 	try {
 		const id = parseInt(req.params.id, 10);
 		const author = await authorService.getById(id);
-		if (!author) return res.status(404).json({ message: 'Author not found' });
+		if (!author) new NotFoundError('Author not found');
 		return res.status(200).json(author);
 	} catch (e) {
 		next(e);
@@ -55,10 +57,10 @@ export const updateAuthor = async (
 		const id = parseInt(req.params.id, 10);
 		const input = req.body.sanitizedInput as AuthorInput;
 		if (id !== input.id) {
-			return res.status(400).json({ message: 'Id mismatch' });
+			new ValidationError('id mismatch');
 		}
 		const updated = await authorService.update(input);
-		if (!updated) return res.status(404).json({ message: 'Author not found' });
+		if (!updated) new NotFoundError('Author not found');
 		return res.status(204).json({ message: 'Author updated successfully' });
 	} catch (e) {
 		next(e);
@@ -73,7 +75,7 @@ export const deleteAuthor = async (
 	try {
 		const id = parseInt(req.params.id, 10);
 		const deleted = await authorService.delete(id);
-		if (!deleted) return res.status(404).json({ message: 'Author not found' });
+		if (!deleted) new NotFoundError('Author not found');
 		return res.status(204).json({ message: 'Author deleted' });
 	} catch (e) {
 		next(e);

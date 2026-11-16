@@ -1,8 +1,5 @@
-import {
-	ForeignKeyConstraintViolationException,
-	UniqueConstraintViolationException,
-} from '@mikro-orm/core';
 import type { NextFunction, Request, Response } from 'express';
+import { AppError } from '../errrors/AppError.js';
 
 export function errorHandler(
 	e: unknown,
@@ -12,15 +9,9 @@ export function errorHandler(
 ) {
 	console.error('ERROR:', e);
 
-	if (e instanceof ForeignKeyConstraintViolationException) {
-		console.error(e.message);
-		return res.status(400).json({
-			error: 'Invalid reference: related entity not found',
-		});
-	}
-	if (e instanceof UniqueConstraintViolationException) {
-		return res.status(409).json({
-			error: 'Resource already exists',
+	if (e instanceof AppError) {
+		return res.status(e.statusCode).json({
+			error: e.message,
 		});
 	}
 	return res.status(500).json({
