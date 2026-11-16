@@ -1,6 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
-import { AppError } from '../errrors/AppError.js';
-import { ValidationError } from '../errrors/ValidationError.js';
+import { AppError } from '../errors/AppError.js';
+import { ValidationError } from '../errors/ValidationError.js';
 
 export function errorHandler(
 	e: unknown,
