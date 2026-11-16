@@ -41,8 +41,7 @@ export class BookCopyService
 	}
 
 	async delete(id: number): Promise<void> {
-		const toDelete = await this.getById(id);
-
-		await em.remove(toDelete).flush();
+		const copy = await this.getById(id);
+		await em.remove(copy).flush();
 	}
 }

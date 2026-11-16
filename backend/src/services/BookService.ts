@@ -1,4 +1,4 @@
-import { NotFoundError } from '@mikro-orm/core';
+import { NotFoundError } from '../errors/NotFoundError.js';
 import { orm } from '../infrastructure/orm.js';
 import { Author } from '../models/Author.js';
 import { Book } from '../models/Book.js';
@@ -10,81 +10,48 @@ import type { IEntityService } from './interfaces/IEntityService.js';
 const em = orm.em;
 
 export class BookService implements IEntityService<Book, BookInput> {
-	async getById(id: number): Promise<Book | null> {
-		try {
-			return await em.findOneOrFail(
-				Book,
-				{ id: id },
-				{ populate: ['gender', 'author', 'publisher'] },
-			);
-		} catch (e) {
-			console.error(`error getById: ${e}`);
-			if (e instanceof NotFoundError) {
-				return null;
-			}
-			throw e;
+	async getById(id: number): Promise<Book> {
+		const book = await em.findOne(
+			Book,
+			{ id: id },
+			{ populate: ['gender', 'author', 'publisher'] },
+		);
+		if (!book) {
+			throw new NotFoundError('Book not found.');
 		}
+		return book;
 	}
 
 	async getAll(): Promise<Book[]> {
-		try {
-			return await em.find(
-				Book,
-				{},
-				{ populate: ['gender', 'author', 'publisher'] },
-			);
-		} catch (e) {
-			console.error(`error getAll: ${e}`);
-			return [];
-		}
+		return await em.find(
+			Book,
+			{},
+			{ populate: ['gender', 'author', 'publisher'] },
+		);
 	}
+
 	async create(input: BookInput): Promise<Book> {
-		try {
-			const book = new Book();
-			book.title = input.title;
-			book.author = em.getReference(Author, input.author.id);
-			book.gender = em.getReference(Gender, input.gender.id);
-			book.publisher = em.getReference(Publisher, input.publisher.id);
-			em.create(Book, book);
-			await em.flush();
-			return book;
-		} catch (e) {
-			console.error(`error create: ${e}`);
-			throw e;
-		}
+		const book = new Book();
+		book.title = input.title;
+		book.author = em.getReference(Author, input.author.id);
+		book.gender = em.getReference(Gender, input.gender.id);
+		book.publisher = em.getReference(Publisher, input.publisher.id);
+		em.create(Book, book);
+		await em.flush();
+		return book;
 	}
 
-	async update(input: BookInput): Promise<boolean> {
-		try {
-			const toUpdate = await this.getById(input.id);
-			if (!toUpdate) {
-				return false;
-			}
-			const book = new Book();
-			book.title = input.title;
-			book.author = em.getReference(Author, input.author.id);
-			book.gender = em.getReference(Gender, input.gender.id);
-			book.publisher = em.getReference(Publisher, input.publisher.id);
-
-			em.assign(toUpdate, book);
-			await em.flush();
-			return true;
-		} catch (e) {
-			console.error(`error update: ${e}`);
-			throw e;
-		}
+	async update(input: BookInput): Promise<void> {
+		const book = await this.getById(input.id);
+		book.title = input.title;
+		book.author = em.getReference(Author, input.author.id);
+		book.gender = em.getReference(Gender, input.gender.id);
+		book.publisher = em.getReference(Publisher, input.publisher.id);
+		await em.flush();
 	}
-	async delete(id: number): Promise<boolean> {
-		try {
-			const toDelete = await this.getById(id);
-			if (!toDelete) {
-				return false;
-			}
-			await em.removeAndFlush(toDelete);
-			return true;
-		} catch (e) {
-			console.error(`error deleting: ${e}`);
-			throw e;
-		}
+
+	async delete(id: number): Promise<void> {
+		const toDelete = await this.getById(id);
+		await em.remove(toDelete).flush();
 	}
 }

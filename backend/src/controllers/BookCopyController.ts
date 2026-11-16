@@ -24,8 +24,8 @@ export const getBookCopyById = async (
 ) => {
 	try {
 		const id = parseInt(req.params.id, 10);
-		await bookCopyService.getById(id);
-		return res.status(204);
+		const copy = await bookCopyService.getById(id);
+		return res.status(200).json(copy);
 	} catch (e) {
 		next(e);
 	}
@@ -54,7 +54,7 @@ export const updateBookCopy = async (
 		const input = req.body.sanitizedInput as BookCopyInput;
 		input.id = parseInt(req.params.id, 10);
 		await bookCopyService.update(input);
-		return res.status(204).json();
+		return res.sendStatus(204);
 	} catch (e) {
 		next(e);
 	}
@@ -68,7 +68,7 @@ export const deleteBookCopy = async (
 	try {
 		const id = parseInt(req.params.id, 10);
 		await bookCopyService.delete(id);
-		return res.status(204).json();
+		return res.sendStatus(204);
 	} catch (e) {
 		next(e);
 	}

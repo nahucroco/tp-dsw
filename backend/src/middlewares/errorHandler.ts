@@ -5,7 +5,7 @@ import { ForeignKeyConstraintViolationException } from '@mikro-orm/core';
 
 export function errorHandler(
 	e: unknown,
-	_req: Request,
+	req: Request,
 	res: Response,
 	_next: NextFunction,
 ) {
@@ -23,6 +23,11 @@ export function errorHandler(
 		});
 	}
 	if (e instanceof ForeignKeyConstraintViolationException) {
+		if (req.method === 'DELETE') {
+			return res.status(409).json({
+				error: 'Cannot delete entity because it has dependent records',
+			});
+		}
 		return res.status(404).json({
 			error: 'Related entity not found',
 		});

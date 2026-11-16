@@ -28,7 +28,7 @@ export class Book extends BusinessEntity {
 		() => BookCopy,
 		(copy) => copy.book,
 		{
-			cascade: [Cascade.PERSIST, Cascade.REMOVE],
+			cascade: [Cascade.PERSIST],
 			orphanRemoval: true,
 			strategy: LoadStrategy.SELECT_IN,
 		},
