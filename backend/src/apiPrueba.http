@@ -45,7 +45,7 @@ DELETE http://localhost:3000/api/books/1
 GET http://localhost:3000/api/authors
 ###
 ### Get author by id
-GET http://localhost:3000/api/authors/2
+GET http://localhost:3000/api/authors/1
 ###
 ### Create author
 POST http://localhost:3000/api/authors
@@ -57,11 +57,13 @@ Content-Type: application/json
 }
 ###
 ### Update author
-PUT http://localhost:3000/api/authors/1
+PUT http://localhost:3000/api/authors/2
 Content-Type: application/json
 
+
 {
-  "name": "Stephen King"
+  "id": 0,
+  "name": "Stephen Kng"
 }
 ###
 ### Delete author
@@ -78,7 +80,7 @@ POST http://localhost:3000/api/genders
 Content-Type: application/json
 
 {
-  "id": 1,
+  "id": 0,
   "description": "fantasia"
 }
 ###
@@ -87,6 +89,7 @@ PUT http://localhost:3000/api/genders/1
 Content-Type: application/json
 
 {
+
   "description": "Horror"
 }
 ###

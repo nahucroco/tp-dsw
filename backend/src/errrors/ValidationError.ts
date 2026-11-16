@@ -1,7 +1,9 @@
 import { AppError } from './AppError.js';
 
 export class ValidationError extends AppError {
-	constructor(message: string) {
+	public readonly errors?: unknown[];
+	constructor(message: string, errors?: unknown[]) {
 		super(message, 400);
+		this.errors = errors;
 	}
 }

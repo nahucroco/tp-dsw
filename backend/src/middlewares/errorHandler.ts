@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import { AppError } from '../errrors/AppError.js';
+import { ValidationError } from '../errrors/ValidationError.js';
 
 export function errorHandler(
 	e: unknown,
@@ -8,6 +9,12 @@ export function errorHandler(
 	_next: NextFunction,
 ) {
 	console.error('ERROR:', e);
+	if (e instanceof ValidationError) {
+		return res.status(e.statusCode).json({
+			error: e.message,
+			errors: e.errors,
+		});
+	}
 
 	if (e instanceof AppError) {
 		return res.status(e.statusCode).json({

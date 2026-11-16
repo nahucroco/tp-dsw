@@ -2,6 +2,6 @@ import { AppError } from './AppError.js';
 
 export class NotFoundError extends AppError {
 	constructor(message: string) {
-		super(message, 500);
+		super(message, 404);
 	}
 }
