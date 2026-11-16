@@ -1,8 +1,8 @@
+import { NotFoundError } from '../errors/NotFoundError.js';
 import { orm } from '../infrastructure/orm.js';
 import { Author } from '../models/Author.js';
 import type { AuthorInput } from '../schemas/AuthorSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';
-import { NotFoundError } from '../errors/NotFoundError.js';
 
 const em = orm.em;
 class AuthorService implements IEntityService<Author, AuthorInput> {

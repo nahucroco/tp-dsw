@@ -1,4 +1,3 @@
-import e from 'cors';
 import type { NextFunction, Request, Response } from 'express';
 import type { BookCopyInput } from '../schemas/BookCopySchema.js';
 import { BookCopyService } from '../services/BookCopyService.js';
@@ -25,9 +24,8 @@ export const getBookCopyById = async (
 ) => {
 	try {
 		const id = parseInt(req.params.id, 10);
-		const copy = await bookCopyService.getById(id);
-		if (!copy) return res.status(404).json({ message: 'Book copy not found' });
-		return res.status(200).json(copy);
+		await bookCopyService.getById(id);
+		return res.status(204);
 	} catch (e) {
 		next(e);
 	}
@@ -53,14 +51,9 @@ export const updateBookCopy = async (
 	next: NextFunction,
 ) => {
 	try {
-		const id = parseInt(req.params.id, 10);
 		const input = req.body.sanitizedInput as BookCopyInput;
-		if (id !== input.id) {
-			return res.status(400).json({ message: 'Id mismatch' });
-		}
-		const updated = await bookCopyService.update(input);
-		if (!updated)
-			return res.status(404).json({ message: 'Book copy not found' });
+		input.id = parseInt(req.params.id, 10);
+		await bookCopyService.update(input);
 		return res.status(204).json();
 	} catch (e) {
 		next(e);
@@ -74,11 +67,9 @@ export const deleteBookCopy = async (
 ) => {
 	try {
 		const id = parseInt(req.params.id, 10);
-		const deleted = await bookCopyService.delete(id);
-		if (!deleted)
-			return res.status(404).json({ message: 'Book copy not found' });
+		await bookCopyService.delete(id);
 		return res.status(204).json();
-	} catch (_e) {
+	} catch (e) {
 		next(e);
 	}
 };

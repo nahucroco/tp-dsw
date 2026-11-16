@@ -1,4 +1,4 @@
-import { NotFoundError } from '@mikro-orm/core';
+import { NotFoundError } from '../errors/NotFoundError.js';
 import { orm } from '../infrastructure/orm.js';
 import { Book } from '../models/Book.js';
 import { BookCopy } from '../models/BookCopy.js';
@@ -10,72 +10,39 @@ const em = orm.em;
 export class BookCopyService
 	implements IEntityService<BookCopy, BookCopyInput>
 {
-	async getById(id: number): Promise<BookCopy | null> {
-		try {
-			return await em.findOneOrFail(BookCopy, { id }, { populate: ['book'] });
-		} catch (e) {
-			console.error(`error getById: ${e}`);
-			if (e instanceof NotFoundError) {
-				return null;
-			}
-			throw e;
+	async getById(id: number): Promise<BookCopy> {
+		const bookCopy = await em.findOne(BookCopy, { id }, { populate: ['book'] });
+		if (!bookCopy) {
+			throw new NotFoundError('Book copy not found');
 		}
+		return bookCopy;
 	}
 
 	async getAll(): Promise<BookCopy[]> {
-		try {
-			return await em.find(BookCopy, {}, { populate: ['book'] });
-		} catch (e) {
-			console.error(`error getAll: ${e}`);
-			return [];
-		}
+		return await em.find(BookCopy, {}, { populate: ['book'] });
 	}
 
 	async create(input: BookCopyInput): Promise<BookCopy> {
-		try {
-			const copy = new BookCopy();
-			copy.is_available = input.is_available;
-			copy.condition = input.condition;
-			copy.book = em.getReference(Book, input.book.id);
-			em.create(BookCopy, copy);
-			await em.flush();
-			return copy;
-		} catch (e) {
-			console.error(`error create: ${e}`);
-			throw e;
-		}
+		const copy = new BookCopy();
+		copy.is_available = input.is_available;
+		copy.condition = input.condition;
+		copy.book = em.getReference(Book, input.book.id);
+		em.create(BookCopy, copy);
+		await em.flush();
+		return copy;
 	}
 
-	async update(input: BookCopyInput): Promise<boolean> {
-		try {
-			const toUpdate = await this.getById(input.id);
-			if (!toUpdate) {
-				return false;
-			}
-			const copy = new BookCopy();
-			copy.is_available = input.is_available;
-			copy.condition = input.condition;
-			copy.book = em.getReference(Book, input.book.id);
-			em.assign(toUpdate, copy);
-			await em.flush();
-			return true;
-		} catch (e) {
-			console.error(`error update: ${e}`);
-			throw e;
-		}
+	async update(input: BookCopyInput): Promise<void> {
+		const copy = await this.getById(input.id);
+		copy.is_available = input.is_available;
+		copy.condition = input.condition;
+		copy.book = em.getReference(Book, input.book.id);
+		await em.flush();
 	}
 
-	async delete(id: number): Promise<boolean> {
-		try {
-			const toDelete = await this.getById(id);
-			if (!toDelete) {
-				return false;
-			}
-			await em.removeAndFlush(toDelete);
-			return true;
-		} catch (e) {
-			console.error(`error deleting: ${e}`);
-			throw e;
-		}
+	async delete(id: number): Promise<void> {
+		const toDelete = await this.getById(id);
+
+		await em.remove(toDelete).flush();
 	}
 }

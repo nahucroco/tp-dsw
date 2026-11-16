@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from 'express';
 import { AppError } from '../errors/AppError.js';
 import { ValidationError } from '../errors/ValidationError.js';
+import { ForeignKeyConstraintViolationException } from '@mikro-orm/core';
 
 export function errorHandler(
 	e: unknown,
@@ -19,6 +20,11 @@ export function errorHandler(
 	if (e instanceof AppError) {
 		return res.status(e.statusCode).json({
 			error: e.message,
+		});
+	}
+	if (e instanceof ForeignKeyConstraintViolationException) {
+		return res.status(404).json({
+			error: 'Related entity not found',
 		});
 	}
 	return res.status(500).json({
