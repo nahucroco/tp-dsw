@@ -1,5 +1,5 @@
 import { NotFoundError } from '@mikro-orm/core';
-import { orm } from '../data/orm.js';
+import { orm } from '../infrastructure/orm.js';
 import { Sanction } from '../models/Sanction.js';
 import { Loan } from '../models/Loan.js';
 import { Person } from '../models/Person.js';

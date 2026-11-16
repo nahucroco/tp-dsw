@@ -1,6 +1,6 @@
 /*
 import type { Request, Response } from 'express';
-import ReservaData from '../data/ReservaData.js';
+import ReservaData from '../infrastructure/ReservaData.js';
 import { Reserva } from '../models/Reserva.js';
 
 let currentId = 1;

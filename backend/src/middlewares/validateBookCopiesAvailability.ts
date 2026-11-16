@@ -1,6 +1,6 @@
 import { NotFoundError } from '@mikro-orm/core';
 import type { NextFunction, Request, Response } from 'express';
-import { orm } from '../data/orm.js';
+import { orm } from '../infrastructure/orm.js';
 import { BookCopy } from '../models/BookCopy.js';
 import { Loan } from '../models/Loan.js';
 const em = orm.em;

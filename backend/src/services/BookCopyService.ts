@@ -1,5 +1,5 @@
 import { NotFoundError } from '@mikro-orm/core';
-import { orm } from '../data/orm.js';
+import { orm } from '../infrastructure/orm.js';
 import { Book } from '../models/Book.js';
 import { BookCopy } from '../models/BookCopy.js';
 import type { BookCopyInput } from '../schemas/BookCopySchema.js';

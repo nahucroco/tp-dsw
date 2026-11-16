@@ -1,5 +1,5 @@
 import { NotFoundError } from '@mikro-orm/core';
-import { orm } from '../data/orm.js';
+import { orm } from '../infrastructure/orm.js';
 import { Gender } from '../models/Gender.js';
 import type { GenderInput } from '../schemas/GenderSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';

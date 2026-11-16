@@ -1,5 +1,5 @@
 import { NotFoundError } from '@mikro-orm/core';
-import { orm } from '../data/orm.js';
+import { orm } from '../infrastructure/orm.js';
 import { Publisher } from '../models/Publisher.js';
 import type { PublisherInput } from '../schemas/PublisherSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';

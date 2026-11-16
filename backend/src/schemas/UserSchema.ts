@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { UserRole } from '../enums/UserRole.js';
 
 const UserSchema = z.object({
 	id: z.number().int(),
@@ -12,6 +13,7 @@ const UserSchema = z.object({
 	person: z.object({
 		id: z.number().int().positive(),
 	}),
+	role: z.enum(UserRole),
 });
 
 export type UserInput = z.infer<typeof UserSchema>;
