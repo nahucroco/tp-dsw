@@ -13,6 +13,8 @@ import personRoutes from './routes/personRoutes.js';
 import publisherRoutes from './routes/publisherRoutes.js';
 import sanctionRoutes from './routes/sanctionRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import loginRoutes from './routes/loginRoutes.js';
+import cookieParser from 'cookie-parser';
 const app = express();
 app.use(
 	cors({
@@ -31,7 +33,7 @@ app.use(
 );
 
 app.use(express.json());
-
+app.use(cookieParser());
 app.use(
 	(
 		_req: express.Request,
@@ -51,6 +53,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/loans', loanRoutes);
 app.use('/api/publishers', publisherRoutes);
 app.use('/api/sanctions', sanctionRoutes);
+app.use('/api/', loginRoutes);
 app.use((_req: express.Request, res: express.Response) => {
 	return res.status(404).send({ message: 'Not Found' });
 });
