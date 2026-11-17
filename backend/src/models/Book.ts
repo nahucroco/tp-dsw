@@ -11,15 +11,15 @@ import {
 import { Author } from './Author.js';
 import { BookCopy } from './BookCopy.js';
 import { BusinessEntity } from './BusinessEntity.js';
-import { Gender } from './Gender.js';
+import { Genre } from './Genre.js';
 import { Publisher } from './Publisher.js';
 
 @Entity()
 export class Book extends BusinessEntity {
 	@Property()
 	title!: string;
-	@ManyToOne(() => Gender, { nullable: false })
-	gender!: Rel<Gender>;
+	@ManyToOne(() => Genre, { nullable: false })
+	gender!: Rel<Genre>;
 	@ManyToOne(() => Author, { nullable: false })
 	author!: Rel<Author>;
 	@ManyToOne(() => Publisher, { nullable: false })

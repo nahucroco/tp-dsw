@@ -1,15 +1,15 @@
 import { NotFoundError } from '@mikro-orm/core';
 import { orm } from '../infrastructure/orm.js';
-import { Gender } from '../models/Gender.js';
-import type { GenderInput } from '../schemas/GenderSchema.js';
+import { Genre } from '../models/Genre.js';
+import type { GenreInput } from '../schemas/GenreSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';
 
 const em = orm.em;
 
-export class GenderService implements IEntityService<Gender, GenderInput> {
-	async getById(id: number): Promise<Gender | null> {
+export class GenreService implements IEntityService<Genre, GenreInput> {
+	async getById(id: number): Promise<Genre | null> {
 		try {
-			return await em.findOneOrFail(Gender, { id });
+			return await em.findOneOrFail(Genre, { id });
 		} catch (e) {
 			console.error(`error getById: ${e}`);
 			if (e instanceof NotFoundError) {
@@ -19,20 +19,20 @@ export class GenderService implements IEntityService<Gender, GenderInput> {
 		}
 	}
 
-	async getAll(): Promise<Gender[]> {
+	async getAll(): Promise<Genre[]> {
 		try {
-			return await em.find(Gender, {});
+			return await em.find(Genre, {});
 		} catch (e) {
 			console.error(`error getAll: ${e}`);
 			return [];
 		}
 	}
 
-	async create(input: GenderInput): Promise<Gender> {
+	async create(input: GenreInput): Promise<Genre> {
 		try {
-			const gender = new Gender();
+			const gender = new Genre();
 			gender.description = input.description;
-			em.create(Gender, gender);
+			em.create(Genre, gender);
 			await em.flush();
 			return gender;
 		} catch (e) {
@@ -41,7 +41,7 @@ export class GenderService implements IEntityService<Gender, GenderInput> {
 		}
 	}
 
-	async update(input: GenderInput): Promise<boolean> {
+	async update(input: GenreInput): Promise<boolean> {
 		try {
 			const toUpdate = await this.getById(input.id);
 			if (!toUpdate) {

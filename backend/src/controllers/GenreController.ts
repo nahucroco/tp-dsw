@@ -1,9 +1,9 @@
 import e from 'cors';
 import type { NextFunction, Request, Response } from 'express';
-import type { GenderInput } from '../schemas/GenderSchema.js';
-import { GenderService } from '../services/GenderService.js';
+import type { GenreInput } from '../schemas/GenreSchema.js';
+import { GenreService } from '../services/GenreService.js';
 
-const genderService = new GenderService();
+const genderService = new GenreService();
 
 export const getGenders = async (
 	_req: Request,
@@ -39,7 +39,7 @@ export const createGender = async (
 	next: NextFunction,
 ) => {
 	try {
-		const input = req.body.sanitizedInput as GenderInput;
+		const input = req.body.sanitizedInput as GenreInput;
 		const gender = await genderService.create(input);
 		return res.status(201).json(gender);
 	} catch (e) {
@@ -54,7 +54,7 @@ export const updateGender = async (
 ) => {
 	try {
 		const id = parseInt(req.params.id, 10);
-		const input = req.body.sanitizedInput as GenderInput;
+		const input = req.body.sanitizedInput as GenreInput;
 		if (id !== input.id) {
 			return res.status(400).json({ message: 'Id mismatch' });
 		}

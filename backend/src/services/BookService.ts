@@ -2,7 +2,7 @@ import { NotFoundError } from '../errors/NotFoundError.js';
 import { orm } from '../infrastructure/orm.js';
 import { Author } from '../models/Author.js';
 import { Book } from '../models/Book.js';
-import { Gender } from '../models/Gender.js';
+import { Genre } from '../models/Genre.js';
 import { Publisher } from '../models/Publisher.js';
 import type { BookInput } from '../schemas/BookSchema.js';
 import type { IEntityService } from './interfaces/IEntityService.js';
@@ -34,7 +34,7 @@ export class BookService implements IEntityService<Book, BookInput> {
 		const book = new Book();
 		book.title = input.title;
 		book.author = em.getReference(Author, input.author.id);
-		book.gender = em.getReference(Gender, input.gender.id);
+		book.gender = em.getReference(Genre, input.gender.id);
 		book.publisher = em.getReference(Publisher, input.publisher.id);
 		em.create(Book, book);
 		await em.flush();
@@ -45,7 +45,7 @@ export class BookService implements IEntityService<Book, BookInput> {
 		const book = await this.getById(input.id);
 		book.title = input.title;
 		book.author = em.getReference(Author, input.author.id);
-		book.gender = em.getReference(Gender, input.gender.id);
+		book.gender = em.getReference(Genre, input.gender.id);
 		book.publisher = em.getReference(Publisher, input.publisher.id);
 		await em.flush();
 	}

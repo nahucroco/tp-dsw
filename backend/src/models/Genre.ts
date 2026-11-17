@@ -3,7 +3,7 @@ import { Book } from './Book.js';
 import { BusinessEntity } from './BusinessEntity.js';
 
 @Entity()
-export class Gender extends BusinessEntity {
+export class Genre extends BusinessEntity {
 	@Property({ nullable: false })
 	description!: string;
 	@OneToMany(
