@@ -12,10 +12,10 @@ Content-Type: application/json
   "id": 1,
   "title": "harry poter",
   "author": {
-    "id": 1
+    "id": 2
   },
   "gender": {
-    "id": 1
+    "id": 2
   },
   "publisher": {
     "id": 1
@@ -23,15 +23,19 @@ Content-Type: application/json
 }
 
 ### Updated book
-PUT http://localhost:3000/api/books/1
+PUT http://localhost:3000/api/books/5
 Content-Type: application/json
 
 {
-  "name": "Eso",
+  "id": 0,
+  "title": "harry potter",
   "author": {
-    "id": 1
+    "id": 2
   },
   "gender": {
+    "id": 2
+  },
+  "publisher": {
     "id": 1
   }
 }
