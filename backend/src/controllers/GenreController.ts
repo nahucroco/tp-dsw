@@ -1,81 +1,74 @@
-import e from 'cors';
 import type { NextFunction, Request, Response } from 'express';
 import type { GenreInput } from '../schemas/GenreSchema.js';
 import { GenreService } from '../services/GenreService.js';
 
-const genderService = new GenreService();
+const genreService = new GenreService();
 
-export const getGenders = async (
+export const getGenres = async (
 	_req: Request,
 	res: Response,
 	next: NextFunction,
 ) => {
 	try {
-		const genders = await genderService.getAll();
-		return res.json(genders);
-	} catch (_e) {
+		const genres = await genreService.getAll();
+		return res.json(genres);
+	} catch (e) {
 		next(e);
 	}
 };
 
-export const getGenderById = async (
+export const getGenreById = async (
 	req: Request,
 	res: Response,
 	next: NextFunction,
 ) => {
 	try {
 		const id = parseInt(req.params.id, 10);
-		const gender = await genderService.getById(id);
-		if (!gender) return res.status(404).json({ message: 'Gender not found' });
-		return res.status(200).json(gender);
+		const genre = await genreService.getById(id);
+		return res.status(200).json(genre);
 	} catch (e) {
 		next(e);
 	}
 };
 
-export const createGender = async (
+export const createGenre = async (
 	req: Request,
 	res: Response,
 	next: NextFunction,
 ) => {
 	try {
 		const input = req.body.sanitizedInput as GenreInput;
-		const gender = await genderService.create(input);
-		return res.status(201).json(gender);
+		const genre = await genreService.create(input);
+		return res.status(201).json(genre);
 	} catch (e) {
 		next(e);
 	}
 };
 
-export const updateGender = async (
+export const updateGenre = async (
 	req: Request,
 	res: Response,
 	next: NextFunction,
 ) => {
 	try {
-		const id = parseInt(req.params.id, 10);
 		const input = req.body.sanitizedInput as GenreInput;
-		if (id !== input.id) {
-			return res.status(400).json({ message: 'Id mismatch' });
-		}
-		const updated = await genderService.update(input);
-		if (!updated) return res.status(404).json({ message: 'Gender not found' });
-		return res.status(204).json();
+		input.id = parseInt(req.params.id, 10);
+		await genreService.update(input);
+		return res.sendStatus(204);
 	} catch (e) {
 		next(e);
 	}
 };
 
-export const deleteGender = async (
+export const deleteGenre = async (
 	req: Request,
 	res: Response,
 	next: NextFunction,
 ) => {
 	try {
 		const id = parseInt(req.params.id, 10);
-		const deleted = await genderService.delete(id);
-		if (!deleted) return res.status(404).json({ message: 'Gender not found' });
-		return res.status(204).json();
+		await genreService.delete(id);
+		return res.sendStatus(204);
 	} catch (e) {
 		next(e);
 	}

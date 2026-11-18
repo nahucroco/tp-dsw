@@ -1,20 +1,20 @@
 import { Router } from 'express';
 import {
-	createGender,
-	deleteGender,
-	getGenderById,
-	getGenders,
-	updateGender,
+	createGenre,
+	deleteGenre,
+	getGenreById,
+	getGenres,
+	updateGenre,
 } from '../controllers/GenreController.js';
 import { validateBody } from '../middlewares/validateBody.js';
 import { GenreSchema } from '../schemas/GenreSchema.js';
 
 const router = Router();
 
-router.get('/', getGenders);
-router.get('/:id', getGenderById);
-router.post('/', validateBody(GenreSchema), createGender);
-router.put('/:id', validateBody(GenreSchema), updateGender);
-router.delete('/:id', deleteGender);
+router.get('/', getGenres);
+router.get('/:id', getGenreById);
+router.post('/', validateBody(GenreSchema), createGenre);
+router.put('/:id', validateBody(GenreSchema), updateGenre);
+router.delete('/:id', deleteGenre);
 
 export default router;
