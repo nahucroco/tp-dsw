@@ -25,7 +25,6 @@ export const getLoanById = async (
 	try {
 		const id = parseInt(req.params.id, 10);
 		const loan = await loanService.getById(id);
-		if (!loan) return res.status(404).json({ message: 'Loan not found' });
 		return res.status(200).json(loan);
 	} catch (e) {
 		next(e);
@@ -52,14 +51,10 @@ export const updateLoan = async (
 	next: NextFunction,
 ) => {
 	try {
-		const id = parseInt(req.params.id, 10);
 		const input = req.body.sanitizedInput as LoanInput;
-		if (id !== input.id) {
-			return res.status(400).json({ message: 'Id mismatch' });
-		}
-		const updated = await loanService.update(input);
-		if (!updated) return res.status(404).json({ message: 'Loan not found' });
-		return res.status(204).json();
+		input.id = parseInt(req.params.id, 10);
+		await loanService.update(input);
+		return res.sendStatus(204);
 	} catch (e) {
 		next(e);
 	}
@@ -72,9 +67,8 @@ export const deleteLoan = async (
 ) => {
 	try {
 		const id = parseInt(req.params.id, 10);
-		const deleted = await loanService.delete(id);
-		if (!deleted) return res.status(404).json({ message: 'Loan not found' });
-		return res.status(204).json();
+		await loanService.delete(id);
+		return res.sendStatus(204);
 	} catch (e) {
 		next(e);
 	}
